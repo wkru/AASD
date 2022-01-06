@@ -2,7 +2,7 @@ from spade.agent import Agent
 from spade.behaviour import OneShotBehaviour
 from spade.template import Template
 
-from messages.requestManagement.response import Response
+from messages import requestManagement
 
 
 class InformationBrokerAgent(Agent):
@@ -13,7 +13,7 @@ class InformationBrokerAgent(Agent):
             msg = await self.receive(timeout=1000)  # wait for a message for 10 seconds
             if msg:
                 if msg.metadata['performative'] == 'request':
-                    resp = Response(to=str(msg.sender), data=self.requests)
+                    resp = requestManagement.Response(to=str(msg.sender), data=self.requests)
                     await self.send(resp)
                 print("Message received with content: {}".format(msg.body))
             else:

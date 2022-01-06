@@ -3,7 +3,7 @@ import json
 from spade.agent import Agent
 from spade.behaviour import OneShotBehaviour
 
-from messages.requestManagement.retrieve import Retrieve
+from messages import requestManagement
 
 
 class UserAgent(Agent):
@@ -30,7 +30,7 @@ class UserAgent(Agent):
         async def run(self):
             print("AskForRequestsBehav running")
 
-            msg = Retrieve(to='information-broker-1@localhost')
+            msg = requestManagement.Retrieve(to='information-broker-1@localhost')
 
             await self.send(msg)
             print("Message sent!")
