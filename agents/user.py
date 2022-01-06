@@ -2,7 +2,8 @@ import json
 
 from spade.agent import Agent
 from spade.behaviour import OneShotBehaviour
-from spade.message import Message
+
+from messages.requestManagement.retrieve import Retrieve
 
 
 class UserAgent(Agent):
@@ -10,14 +11,14 @@ class UserAgent(Agent):
         async def run(self):
             print("RecvBehav (UserAgent) running")
 
-            msg = await self.receive(timeout=1000)
-            if msg:
-                msg_json = json.loads(msg.body)
-                if msg_json['data_type'] == 'requests':
-                    for product in msg_json['requests']:
-                        print('ID:', product['id'])
-                        print('Category:', product['category'])
-                        print('Comment:', product['comment'])
+            if (msg := await self.receive(timeout=1000)) is not None:
+                if str(msg.sender) == 'information-broker-1@localhost':
+                    if msg.metadata['performative'] == 'inform':
+                        msg_json = json.loads(msg.body)
+                        for product in msg_json:
+                            print('ID:', product['id'])
+                            print('Category:', product['category'])
+                            print('Comment:', product['comment'])
                 print("Message received with content: {}".format(msg.body))
             else:
                 print("Did not receive any message after 1000 seconds")
@@ -28,9 +29,8 @@ class UserAgent(Agent):
     class AskForRequestsBehav(OneShotBehaviour):
         async def run(self):
             print("AskForRequestsBehav running")
-            msg = Message(to="request-registry@localhost")     # Instantiate the message
-            msg.set_metadata("performative", "request")  # Set the "inform" FIPA performative
-            msg.body = json.dumps({'data_type': 'requests'}) # Set the message content
+
+            msg = Retrieve(to='information-broker-1@localhost')
 
             await self.send(msg)
             print("Message sent!")
