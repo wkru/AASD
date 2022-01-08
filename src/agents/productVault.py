@@ -69,7 +69,7 @@ class ProductVaultAgent(Agent):
             if msg:
                 try:
                     msg_contents = json.loads(msg.body)
-                    assert {'category', 'comment', 'location'}.issubset(set(msg_contents.keys()))
+                    assert {'category', 'comment', 'location'} == set(msg_contents.keys())
                     assert msg_contents['category'] >= 0
                     assert msg_contents['category'] < len(self.agent.categories)
                     self.agent.offers[self.agent.next_offer_id] = msg_contents
@@ -90,7 +90,7 @@ class ProductVaultAgent(Agent):
             if msg:
                 try:
                     msg_contents = json.loads(msg.body)
-                    assert 'id' in msg_contents
+                    assert {'id'} == set(msg_contents.keys())
                     assert msg_contents['id'] in self.agent.offers.keys()
                     resp = productVaultServices.GetProductResponse(to=str(msg.sender),
                                                                    data=self.agent.offers.pop(msg_contents['id']))

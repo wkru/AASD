@@ -26,10 +26,10 @@ if __name__ == "__main__":
 
     # useragent.add_behaviour(useragent.VaultCategoriesReqBehav())
 
-    # useragent.set("vault_add_product_data", {'category': 1,
-    #                                          'comment': 'Black pepper',
-    #                                          'location': 'Korytko na parterze'})
-    # useragent.add_behaviour(useragent.VaultAddBehav())
+    useragent.set("vault_add_product_data", {'category': 1,
+                                             'comment': 'Black pepper',
+                                             'location': 'Korytko na parterze'})
+    useragent.add_behaviour(useragent.VaultAddBehav())
 
     # useragent.set("vault_get_product_data", {'id': 0})
     # useragent.add_behaviour(useragent.VaultGetReqBehav())
