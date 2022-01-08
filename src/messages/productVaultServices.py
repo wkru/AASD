@@ -13,7 +13,7 @@ class OffersRetrieve(Message):
 class OffersResponse(Message):
     def __init__(self, to, data):
         body = json.dumps(data)
-        super().__init__(to=to, body=body, metadata={'performative': 'inform', 'protocol': 'vault_offers', 'ontology': ONTOLOGY})
+        super().__init__(to=to, body=body, metadata={'performative': 'response', 'protocol': 'vault_offers', 'ontology': ONTOLOGY})
 
 
 class CategoriesRetrieve(Message):
@@ -24,7 +24,7 @@ class CategoriesRetrieve(Message):
 class CategoriesResponse(Message):
     def __init__(self, to, data):
         body = json.dumps(data)
-        super().__init__(to=to, body=body, metadata={'performative': 'inform', 'protocol': 'vault_categories', 'ontology': ONTOLOGY})
+        super().__init__(to=to, body=body, metadata={'performative': 'response', 'protocol': 'vault_categories', 'ontology': ONTOLOGY})
 
 
 class AddProductRequest(Message):
@@ -42,5 +42,5 @@ class GetProductRequest(Message):
 class GetProductResponse(Message):
     def __init__(self, to, data):
         body = json.dumps(data)
-        super().__init__(to=to, body=body, metadata={'performative': 'inform', 'protocol': 'vault_get', 'ontology': ONTOLOGY})
+        super().__init__(to=to, body=body, metadata={'performative': 'response', 'protocol': 'vault_get', 'ontology': ONTOLOGY})
 
