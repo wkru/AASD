@@ -30,16 +30,16 @@ def review_setup():
 
 class TestReviewCollector(unittest.TestCase):
     review_collector = None
-    user0 = None
+    user = None
     agents = []
 
     def setUp(self) -> None:
         def _create_agent(agent_cls, jid):
             return agent_cls(f'{jid}@localhost', 'aasd')
 
-        self.user0 = _create_agent(UserAgent, 'user0')
+        self.user = _create_agent(UserAgent, 'user0')
         self.review_collector = ReviewCollectorFactory.create_agent()
-        self.agents.append(self.user0)
+        self.agents.append(self.user)
         self.agents.append(self.review_collector)
 
         for a in self.agents:
@@ -50,9 +50,9 @@ class TestReviewCollector(unittest.TestCase):
     def test_leaderboard(self):
         leaderboard = ['a', 'b', 'c']
         self.review_collector.set('leaderboard', leaderboard)
-        self.user0.add_behaviour(UserAgent.LeaderboardReqBehav())
+        self.user.add_behaviour(UserAgent.LeaderboardReqBehav())
 
-        msg = utils.wait_and_get(self.user0, 'last_received_msg')
+        msg = utils.wait_and_get(self.user, 'last_received_msg')
 
         self.assertEqual(json.loads(msg.body), leaderboard)
 
@@ -61,10 +61,10 @@ class TestReviewCollector(unittest.TestCase):
         *_, user2, reviews = review_setup()
 
         self.review_collector.set('reviews', reviews)
-        self.user0.set('target_jid', user2)
-        self.user0.add_behaviour(UserAgent.ReviewsReqBehav())
+        self.user.set('target_jid', user2)
+        self.user.add_behaviour(UserAgent.ReviewsReqBehav())
 
-        msg = utils.wait_and_get(self.user0, 'last_received_msg')
+        msg = utils.wait_and_get(self.user, 'last_received_msg')
 
         self.assertEqual(json.loads(msg.body), reviews[user2])
 
@@ -73,10 +73,10 @@ class TestReviewCollector(unittest.TestCase):
         user0, *_, reviews = review_setup()
 
         self.review_collector.set('reviews', reviews)
-        self.user0.set('target_jid', user0)
-        self.user0.add_behaviour(UserAgent.ReviewsReqBehav())
+        self.user.set('target_jid', user0)
+        self.user.add_behaviour(UserAgent.ReviewsReqBehav())
 
-        msg = utils.wait_and_get(self.user0, 'last_received_msg')
+        msg = utils.wait_and_get(self.user, 'last_received_msg')
         obj = json.loads(msg.body, object_hook=lambda d: Review(**d))
         self.assertEqual(obj, reviews[user0])
 
