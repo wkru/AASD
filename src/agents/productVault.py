@@ -69,10 +69,12 @@ class ProductVaultAgent(Agent):
             if msg:
                 try:
                     msg_contents = json.loads(msg.body)
-                    assert ['category', 'comment', 'location'] in msg_contents.keys()
+                    assert {'category', 'comment', 'location'}.issubset(set(msg_contents.keys()))
                     assert msg_contents['category'] >= 0
                     assert msg_contents['category'] < len(self.agent.categories)
                     self.agent.offers[self.agent.next_offer_id] = msg_contents
+                    print('Added product with ID', str(self.agent.next_offer_id), ':',
+                          str(self.agent.offers[self.agent.next_offer_id]))
                     self.agent.next_offer_id += 1
                 except:
                     print('Malformed AddToProductVault message received')
