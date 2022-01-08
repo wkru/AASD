@@ -235,7 +235,7 @@ class UserAgent(Agent):
         recv_cancel_template.set_metadata("protocol", "cancellation")
         self.add_behaviour(recv_cancel, recv_cancel_template)
 
-        categories_resp_b = self.VaultCategoriesRespBehav()
+        categories_resp_b = self.CategoriesRespBehav()
         categories_resp_template = Template()
         categories_resp_template.set_metadata("performative", "inform")
         categories_resp_template.set_metadata("protocol", "categories")
