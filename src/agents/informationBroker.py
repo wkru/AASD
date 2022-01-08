@@ -15,6 +15,7 @@ class InformationBrokerAgent(Agent):
                           "username": "user2@localhost", "category": "salt", "comment": "Himalaya salt"}
                          ])
         self.set("users",  [])
+        self.set("categories", ["salt", "pepper"])
 
         print("ReceiverAgent started")
 
@@ -41,6 +42,12 @@ class InformationBrokerAgent(Agent):
         cancelled_request_template.set_metadata("performative", "request")
         cancelled_request_template.set_metadata("protocol", "cancellation")
         self.add_behaviour(cancelled_request, cancelled_request_template)
+
+        categories_request = self.CategoriesBehav()
+        categories_request_template = Template()
+        categories_request_template.set_metadata("performative", "request")
+        categories_request_template.set_metadata("protocol", "categories")
+        self.add_behaviour(categories_request, categories_request_template)
 
         register_request = self.RegisterBehav()
         register_request_template = Template()
@@ -140,6 +147,17 @@ class InformationBrokerAgent(Agent):
                 print("Cancel Message received with content: {} {}".format(msg.body, str(msg.sender)))
             else:
                 print("Did not receive any message after 10 seconds")
+
+    class CategoriesBehav(CyclicBehaviour):
+        async def run(self):
+            print("CategoriesBehav running")
+            msg = await self.receive(timeout=1000)
+            if msg:
+                resp = requestManagement.CategoriesResponse(to=str(msg.sender), data=self.agent.get('categories'))
+                await self.send(resp)
+                print("Message received with content: {}".format(msg.body))
+            else:
+                pass
 
     class RegisterBehav(CyclicBehaviour):
         async def run(self):

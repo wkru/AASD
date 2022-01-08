@@ -97,6 +97,20 @@ class UserAgent(Agent):
                 print(self.agent.get("notifications"))
                 print(f"jid: {str(self.agent.jid)} Message received with content: {msg.body}")
 
+    class CategoriesReqBehav(OneShotBehaviour):
+        async def run(self):
+            print('CategoriesReqBehav running')
+
+            msg = requestManagement.CategoriesRetrieve(to=self.agent.get('information_broker_jid'))
+            await self.send(msg)
+
+    class CategoriesRespBehav(CyclicBehaviour):
+        async def run(self):
+            print("CategoriesRespBehav running")
+            msg = await self.receive(timeout=1000)
+            if msg:
+                print("Message received with content: {}".format(msg.body))
+
     class VaultOffersReqBehav(OneShotBehaviour):
         async def run(self):
             print('VaultOffersReqBehav running')
@@ -220,6 +234,12 @@ class UserAgent(Agent):
         recv_cancel_template.set_metadata("performative", "inform")
         recv_cancel_template.set_metadata("protocol", "cancellation")
         self.add_behaviour(recv_cancel, recv_cancel_template)
+
+        categories_resp_b = self.VaultCategoriesRespBehav()
+        categories_resp_template = Template()
+        categories_resp_template.set_metadata("performative", "inform")
+        categories_resp_template.set_metadata("protocol", "categories")
+        self.add_behaviour(categories_resp_b, categories_resp_template)
 
         vault_offers_resp_b = self.VaultOffersRespBehav()
         vault_offers_resp_template = Template()

@@ -55,6 +55,11 @@ if __name__ == "__main__":
     # cancel request test
     # useragent2.set("request_to_cancel", "f9a4be60598dac4d8c28157c2a342cff4e3caed484fc27bab97be2790d75caa5")
     # useragent2.add_behaviour(useragent1.CancelBehav())
+
+    # get categories from information broker
+    useragent1.set('information_broker_jid', 'information-broker-1@localhost')
+    useragent1.add_behaviour(useragent1.CategoriesReqBehav())
+
     # #
     # useragent1 = UserAgent("user1@localhost", "aasd")
     # useragent1.start()

@@ -53,6 +53,17 @@ class CancellationForward(Message):
         super().__init__(to=to, body=body,
                          metadata={'performative': 'inform', 'protocol': 'cancellation', 'ontology': ONTOLOGY})
 
+class CategoriesRetrieve(Message):
+    def __init__(self, to):
+        super().__init__(to=to, metadata={'performative': 'request', 'protocol': 'categories', 'ontology': ONTOLOGY})
+
+
+class CategoriesResponse(Message):
+    def __init__(self, to, data):
+        body = json.dumps(data)
+        super().__init__(to=to, body=body, metadata={'performative': 'inform', 'protocol': 'categories', 'ontology': ONTOLOGY})
+
+
 
 
 
