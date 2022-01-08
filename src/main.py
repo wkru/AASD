@@ -7,6 +7,7 @@ from agents.brokerDirectory import BrokerDirectoryAgent
 from agents.productVault import ProductVaultAgent
 from messages import productVaultServices, requestManagement
 
+from utils import Location
 
 def create_agent(agent_cls, jid):
     return agent_cls(jid, "aasd")
@@ -25,6 +26,9 @@ if __name__ == "__main__":
     useragent1.start()
     useragent2 = UserAgent("user2@localhost", "aasd")
     useragent2.start()
+
+    useragent1.set('location', Location(1, 1))
+    useragent1.add_behaviour(UserAgent.ServicesReqBehav())
 
     # get request list test
     # useragent1.add_behaviour(useragent1.AskForRequestsBehav())
