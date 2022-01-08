@@ -1,6 +1,8 @@
 import unittest
 import json
 
+import timeout_decorator
+
 from factories.reviewCollector import ReviewCollectorFactory
 from agents.user import UserAgent
 from messages.reviewManagement import LeaderboardResponse
@@ -25,6 +27,7 @@ class TestReviewCollector(unittest.TestCase):
             future = a.start()
             future.result()
 
+    @timeout_decorator.timeout(5)
     def test_leaderboard(self):
         leaderboard = ['a', 'b', 'c']
         self.review_collector.set('leaderboard', leaderboard)
