@@ -1,9 +1,11 @@
 import time
+import logging
 
 from spade.agent import Agent
 from agents.informationBroker import InformationBrokerAgent
 from agents.user import UserAgent
 from agents.brokerDirectory import BrokerDirectoryAgent
+from agents.reviewCollector import ReviewCollectorAgent
 
 
 agents: list[Agent] = []
@@ -18,6 +20,7 @@ def create_agent(agent_cls: Agent.__class__, jid: str):
 def main():
     ib_agent = create_agent(InformationBrokerAgent, "information-broker-1")
     create_agent(BrokerDirectoryAgent, "broker-directory")
+    create_agent(ReviewCollectorAgent, 'review-collector-1')
     create_agent(UserAgent, "user1")
 
     for a in agents:
@@ -37,4 +40,5 @@ def main():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     main()
