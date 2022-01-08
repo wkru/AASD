@@ -14,7 +14,7 @@ class InformationBrokerAgent(Agent):
                          {"id": "f9a4be60598dac4d8c28157c2a342cff4e3caed484fc27bab97be2790d75caa5",
                           "username": "user2@localhost", "category": "salt", "comment": "Himalaya salt"}
                          ])
-        self.set("users",  ['user1@localhost', 'user2@localhost'])
+        self.set("users",  [])
 
         print("ReceiverAgent started")
 
@@ -42,11 +42,23 @@ class InformationBrokerAgent(Agent):
         cancelled_request_template.set_metadata("protocol", "cancellation")
         self.add_behaviour(cancelled_request, cancelled_request_template)
 
+        register_request = self.RegisterBehav()
+        register_request_template = Template()
+        register_request_template.set_metadata("performative", "request")
+        register_request_template.set_metadata("protocol", "register")
+        self.add_behaviour(register_request, register_request_template)
+
+        deregister_request = self.DeregisterBehav()
+        deregister_request_template = Template()
+        deregister_request_template.set_metadata("performative", "request")
+        deregister_request_template.set_metadata("protocol", "deregister")
+        self.add_behaviour(deregister_request, deregister_request_template)
+
     class UserRequestsBehav(CyclicBehaviour):
         async def run(self):
             print("UserRequestsBehav running")
             msg = await self.receive(timeout=1000)  # wait for a message for 10 seconds
-            if msg and msg.metadata['performative'] == 'request':
+            if msg:
                 resp = requestManagement.ListResponse(to=str(msg.sender), data=self.agent.get("requests"))
                 await self.send(resp)
                 print("Message received with content: {}".format(msg.body))
@@ -79,7 +91,7 @@ class InformationBrokerAgent(Agent):
         async def run(self):
             print("AcceptedBehav running")
             msg = await self.receive(timeout=1000)  # wait for a message for 10 seconds
-            if msg and msg.metadata['performative'] == 'request':
+            if msg:
                 data = json.loads(msg.body)
                 request_valid = False
                 for request in self.agent.get("requests"):
@@ -110,7 +122,7 @@ class InformationBrokerAgent(Agent):
         async def run(self):
             print("CancelledBehav running")
             msg = await self.receive(timeout=1000)  # wait for a message for 10 seconds
-            if msg and msg.metadata['performative'] == 'request':
+            if msg:
                 data = json.loads(msg.body)
                 request_valid = False
                 for request in self.agent.get("requests"):
@@ -128,3 +140,29 @@ class InformationBrokerAgent(Agent):
                 print("Cancel Message received with content: {} {}".format(msg.body, str(msg.sender)))
             else:
                 print("Did not receive any message after 10 seconds")
+
+    class RegisterBehav(CyclicBehaviour):
+        async def run(self):
+            print("RegisterBehav running")
+            msg = await self.receive(timeout=1000)  # wait for a message for 10 seconds
+            if msg:
+                users = self.agent.get('users')
+                users.append(str(msg.sender))
+                self.agent.set('users', users)
+                print(self.agent.get('users'))
+                print("Register Message received with content: {} {}".format(msg.body, str(msg.sender)))
+
+    class DeregisterBehav(CyclicBehaviour):
+        async def run(self):
+            print("DeregisterBehav running")
+            msg = await self.receive(timeout=1000)  # wait for a message for 10 seconds
+            if msg:
+                try:
+                    users = self.agent.get('users')
+                    users.remove(str(msg.sender))
+                    self.agent.set('users', users)
+                    print(self.agent.get('users'))
+                except:
+                    print('User {} not in active users'.format(msg.sender))
+                print("Deregister Message received with content: {} {}".format(msg.body, str(msg.sender)))
+

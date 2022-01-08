@@ -6,12 +6,10 @@ from config import ONTOLOGY
 
 
 class RegistrationRequest(Message):
-    def __init__(self, to, data):
-        body = json.dumps(data)
-        super().__init__(to=to, body=body, metadata={'performative': 'request', 'protocol': 'user_add', 'ontology': ONTOLOGY})
+    def __init__(self, to):
+        super().__init__(to=to, metadata={'performative': 'request', 'protocol': 'register', 'ontology': ONTOLOGY})
 
 
-class RegistrationResponse(Message):
-    def __init__(self, to, data):
-        body = json.dumps(data)
-        super().__init__(to=to, body=body, metadata={'performative': 'inform', 'protocol': 'user_get', 'ontology': ONTOLOGY})
+class DeregistrationRequest(Message):
+    def __init__(self, to):
+        super().__init__(to=to, metadata={'performative': 'request', 'protocol': 'deregister', 'ontology': ONTOLOGY})

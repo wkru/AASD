@@ -27,8 +27,18 @@ if __name__ == "__main__":
     useragent2 = UserAgent("user2@localhost", "aasd")
     useragent2.start()
 
-    useragent1.set('location', Location(1, 1))
-    useragent1.add_behaviour(UserAgent.ServicesReqBehav())
+    # useragent1.set('location', Location(1, 1))
+    # useragent1.add_behaviour(UserAgent.ServicesReqBehav())
+
+    # useragent1.set('information_broker_jid', 'information-broker-1@localhost')
+    # useragent1.add_behaviour(UserAgent.Register())
+    # useragent2.set('information_broker_jid', 'information-broker-1@localhost')
+    # useragent2.add_behaviour(UserAgent.Register())
+    #
+    # useragent1.set('information_broker_jid', 'information-broker-1@localhost')
+    # useragent1.add_behaviour(UserAgent.Deregister())
+    # useragent2.set('information_broker_jid', 'information-broker-1@localhost')
+    # useragent2.add_behaviour(UserAgent.Deregister())
 
     # get request list test
     # useragent1.add_behaviour(useragent1.AskForRequestsBehav())

@@ -4,7 +4,7 @@ from spade.agent import Agent
 from spade.behaviour import OneShotBehaviour, CyclicBehaviour
 from spade.template import Template
 
-from messages import requestManagement, productVaultServices, serviceDiscovery
+from messages import requestManagement, productVaultServices, serviceDiscovery, userRegistration
 
 from config import BROKER_DIRECTORY_JID
 
@@ -132,7 +132,6 @@ class UserAgent(Agent):
             msg = productVaultServices.AddProductRequest(to=self.agent.get('product_vault_jid'),
                                                          data=self.agent.get('vault_add_product_data'))
             await self.send(msg)
-            print("Message sent!")
 
     class VaultGetReqBehav(OneShotBehaviour):
         async def run(self):
@@ -141,7 +140,6 @@ class UserAgent(Agent):
             msg = productVaultServices.GetProductRequest(to=self.agent.get('product_vault_jid'),
                                                          data=self.agent.get('vault_get_product_data'))
             await self.send(msg)
-            print("Message sent!")
 
     class VaultGetRespBehav(CyclicBehaviour):
         async def run(self):
@@ -160,7 +158,6 @@ class UserAgent(Agent):
                                                     data=(self.agent.get('location').x,
                                                           self.agent.get('location').y))
             await self.send(msg)
-            print("Message sent!")
 
     class ServicesRespBehav(CyclicBehaviour):
         async def run(self):
@@ -178,13 +175,25 @@ class UserAgent(Agent):
             else:
                 pass
 
+    class Register(OneShotBehaviour):
+        async def run(self):
+            print("Register running")
+
+            msg = userRegistration.RegistrationRequest(to=self.agent.get('information_broker_jid'))
+            await self.send(msg)
+
+    class Deregister(OneShotBehaviour):
+        async def run(self):
+            print("Deregister running")
+
+            msg = userRegistration.DeregistrationRequest(to=self.agent.get('information_broker_jid'))
+            await self.send(msg)
 
     async def setup(self):
         # self.set("new_request", {'category': 'salt', 'comment': 'Himalaya salt'})
         self.set("contact_data", {'phone': "000-000-000", "email": "test@test.pl"})
         self.set("notifications", [{'id': 'f9a4be60598dac4d8c28157c2a342cff4e3caed484fc27bab97be2790d75caa5',
                                     'category': 'salt', 'comment': 'Himalaya salt'}])
-        self.product_vault_jid = 'product-vault-1@localhost'
 
         print("SenderAgent started")
 
