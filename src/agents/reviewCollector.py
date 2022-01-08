@@ -1,9 +1,11 @@
+import logging
 from dataclasses import dataclass
-from typing import Union
 
 from spade.agent import Agent
-from spade.behaviour import CyclicBehaviour, OneShotBehaviour
+from spade.behaviour import CyclicBehaviour, OneShotBehaviour, PeriodicBehaviour
 from spade.template import Template
+
+from messages import reviewManagement
 
 
 @dataclass
@@ -21,24 +23,14 @@ class Review:
 
 
 class ReviewCollectorAgent(Agent):
-    def __init__(self, jid: str, password: str):
-        super().__init__(jid, password)
-
-        self.jid = jid
-        self.reviews = []
+    def init(self):
         self.valid_tokens = []
-        self.leaderboard = []
 
-        print(self._get_behaviors())
+        self.set('reviews', [])
+        self.set('leaderboard', [])
 
     def __repr__(self):
         return str(self.__class__.__name__)
-
-    def _get_behaviors(self) -> list[Union[CyclicBehaviour, OneShotBehaviour]]:
-        return [
-            cls_attr for cls_attr in self.__class__.__dict__.values()
-            if 'Behav' in str(cls_attr)
-        ]
 
     def update_leaderboard(self) -> None:
         # todo
@@ -50,16 +42,36 @@ class ReviewCollectorAgent(Agent):
         pass
 
     async def setup(self):
+        self.init()
         print(f'{repr(self)} started')
-        for behavior in self._get_behaviors():
-            self.add_behaviour(behavior, behavior.template)
+
+        review_creation_b = self.ReviewCreationBehav()
+        self.add_behaviour(
+            review_creation_b,
+            Template(metadata={'performative': 'request'}),
+        )
+        leaderboard_b = self.LeaderboardBehav()
+
+        # metadata = {'performative': 'request', 'protocol': 'review-collector-leaderboard'}
+        t = Template()
+        t.set_metadata('performative', 'request')
+        t.set_metadata('protocol', 'review-collector-leaderboard')
+        self.add_behaviour(
+            leaderboard_b,
+            t
+        )
+        review_tokens_creation_b = self.ReviewTokensCreationBehav()
+        self.add_behaviour(
+            review_tokens_creation_b,
+            Template(metadata={'performative': 'request'})
+        )
+        users_reviews_b = self.UserReviewsBehav()
+        self.add_behaviour(
+            users_reviews_b,
+            Template(metadata={'performative': 'request'})
+        )
 
     class ReviewCreationBehav(CyclicBehaviour):
-        template = Template(metadata={
-            'performative': 'request',
-            'protocol': ''
-        })
-
         def __init__(self):
             super().__init__()
 
@@ -67,72 +79,25 @@ class ReviewCollectorAgent(Agent):
             # todo
             pass
 
-    class SendTokenExpiredInfoBehav(OneShotBehaviour):
-        template = Template(metadata={
-            'performative': 'inform',
-            'protocol': ''
-        })
-
-        async def run(self) -> None:
-            # todo
-            pass
+    # class SendTokenExpiredInfoBehav(OneShotBehaviour):
+    #     async def run(self) -> None:
+    #         # todo
+    #         pass
 
     class LeaderboardBehav(CyclicBehaviour):
-        template = Template(metadata={
-            'performative': 'request',
-            'protocol': ''
-        })
-
         async def run(self) -> None:
-            # todo
-            pass
+            logging.info(f'{repr(self)} started')
+            if (msg := await self.receive(timeout=1000)) is not None:
+                logging.info(f'Message received: {msg.body}')
+                resp = reviewManagement.LeaderboardResponse(to=str(msg.sender), data=self.agent.get('leaderboard'))
+                await self.send(resp)
 
-    class ReturnLeaderboardBehav(OneShotBehaviour):
-        template = Template(metadata={
-            'performative': 'inform',
-            'protocol': ''
-        })
-
-        async def run(self) -> None:
-            # todo
-            pass
-
-    class ReviewTokensCreation(CyclicBehaviour):
-        template = Template(metadata={
-            'performative': 'inform',
-            'protocol': ''
-        })
-
-        async def run(self) -> None:
-            # todo
-            pass
-
-    class ReturnReviewTokenBehav(OneShotBehaviour):
-        template = Template(metadata={
-            'performative': 'inform',
-            'protocol': ''
-        })
-
+    class ReviewTokensCreationBehav(CyclicBehaviour):
         async def run(self) -> None:
             # todo
             pass
 
     class UserReviewsBehav(CyclicBehaviour):
-        template = Template(metadata={
-            'performative': 'request',
-            'protocol': ''
-        })
-
-        async def run(self) -> None:
-            # todo
-            pass
-
-    class ReturnUserReviewsBehav(OneShotBehaviour):
-        template = Template(metadata={
-            'performative': 'inform',
-            'protocol': ''
-        })
-
         async def run(self) -> None:
             # todo
             pass
