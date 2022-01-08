@@ -6,10 +6,10 @@ from config import ONTOLOGY
 
 
 class Leaderboard(Message):
-    metadata = {'performative': 'request', 'protocol': 'review-collector-leaderboard', 'ontology': ONTOLOGY}
+    metadata = {'performative': 'request', 'protocol': 'review-collector-leaderboard'}
 
     def __init__(self, to):
-        super().__init__(to=to, metadata=self.metadata)
+        super().__init__(to=to, metadata=dict(self.metadata, **{'ontology': ONTOLOGY}))
 
 
 class LeaderboardResponse(Message):
@@ -17,4 +17,4 @@ class LeaderboardResponse(Message):
 
     def __init__(self, to, data):
         body = json.dumps(data)
-        super().__init__(to=to, body=body, metadata=self.metadata)
+        super().__init__(to=to, body=body, metadata=dict(self.metadata, **{'ontology': ONTOLOGY}))

@@ -50,21 +50,19 @@ class ReviewCollectorAgent(Agent):
             review_creation_b,
             Template(metadata={'performative': 'request'}),
         )
-        leaderboard_b = self.LeaderboardBehav()
 
-        # metadata = {'performative': 'request', 'protocol': 'review-collector-leaderboard'}
-        t = Template()
-        t.set_metadata('performative', 'request')
-        t.set_metadata('protocol', 'review-collector-leaderboard')
+        leaderboard_b = self.LeaderboardBehav()
         self.add_behaviour(
             leaderboard_b,
-            t
+            Template(metadata=reviewManagement.LeaderboardResponse.metadata),
         )
+
         review_tokens_creation_b = self.ReviewTokensCreationBehav()
         self.add_behaviour(
             review_tokens_creation_b,
             Template(metadata={'performative': 'request'})
         )
+
         users_reviews_b = self.UserReviewsBehav()
         self.add_behaviour(
             users_reviews_b,
