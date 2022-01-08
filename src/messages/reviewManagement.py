@@ -26,7 +26,7 @@ class Reviews(Message):
 
     def __init__(self, to, data):
         body = json.dumps(data)
-        super().__init__(to=to, body=body, metadata=dict(self.metadata, **{'onto': ONTOLOGY}))
+        super().__init__(to=to, body=body, metadata=dict(self.metadata, **{'ontology': ONTOLOGY}))
 
 
 class ReviewsResponse(Message):
