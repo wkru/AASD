@@ -42,7 +42,7 @@ class ReviewCollectorAgent(Agent):
         leaderboard_b = self.LeaderboardBehav()
         self.add_behaviour(
             leaderboard_b,
-            Template(metadata=reviewManagement.LeaderboardResponse.metadata),
+            Template(metadata=reviewManagement.Leaderboard.metadata),
         )
 
         review_tokens_creation_b = self.ReviewTokensCreationBehav()
