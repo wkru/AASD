@@ -24,6 +24,11 @@ class UserAgent(Agent):
             leaderboard_resp_b,
             Template(metadata=reviewManagement.LeaderboardResponse.metadata),
         )
+        reviews_b = self.ReviewsRespBehav()
+        self.add_behaviour(
+            reviews_b,
+            Template(metadata=reviewManagement.ReviewsResponse.metadata),
+        )
 
     class RecvBehav(OneShotBehaviour):
         async def run(self):
@@ -62,6 +67,22 @@ class UserAgent(Agent):
 
     class LeaderboardRespBehav(CyclicBehaviour):
         async def run(self):
+            logging.info(f'{repr(self)} running')
+            if (msg := await self.receive(timeout=1000)) is not None:
+                logging.info(f'Message received: {msg.body}')
+                self.agent.set('last_received_msg', msg)
+
+    class ReviewsReqBehav(OneShotBehaviour):
+        async def run(self) -> None:
+            logging.info(f'{repr(self)} running')
+            target_jid = self.agent.get('target_jid')
+            self.agent.set('target_jid', None)
+            msg = reviewManagement.Reviews(to=self.agent._review_collector_jid, data=target_jid)
+            await self.send(msg)
+            logging.info('Message sent!')
+
+    class ReviewsRespBehav(CyclicBehaviour):
+        async def run(self) -> None:
             logging.info(f'{repr(self)} running')
             if (msg := await self.receive(timeout=1000)) is not None:
                 logging.info(f'Message received: {msg.body}')

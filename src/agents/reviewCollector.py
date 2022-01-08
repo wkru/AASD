@@ -1,32 +1,20 @@
 import logging
 from dataclasses import dataclass
+import json
 
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour, OneShotBehaviour, PeriodicBehaviour
 from spade.template import Template
 
 from messages import reviewManagement
-
-
-@dataclass
-class ReviewToken:
-    hash_: int
-    timestamp: int
-
-
-@dataclass
-class Review:
-    token: ReviewToken
-    contents: str
-    rating: int
-    request_id: int
+from misc.review import Review
 
 
 class ReviewCollectorAgent(Agent):
     def init(self):
-        self.valid_tokens = []
+        self.tokens = []
 
-        self.set('reviews', [])
+        self.set('reviews', {})
         self.set('leaderboard', [])
 
     def __repr__(self):
@@ -42,8 +30,8 @@ class ReviewCollectorAgent(Agent):
         pass
 
     async def setup(self):
-        self.init()
         print(f'{repr(self)} started')
+        self.init()
 
         review_creation_b = self.ReviewCreationBehav()
         self.add_behaviour(
@@ -66,7 +54,7 @@ class ReviewCollectorAgent(Agent):
         users_reviews_b = self.UserReviewsBehav()
         self.add_behaviour(
             users_reviews_b,
-            Template(metadata={'performative': 'request'})
+            Template(metadata=reviewManagement.Reviews.metadata)
         )
 
     class ReviewCreationBehav(CyclicBehaviour):
@@ -95,7 +83,14 @@ class ReviewCollectorAgent(Agent):
             # todo
             pass
 
+    def get_reviews(self, jid: str) -> list[Review]:
+        return self.get('reviews').get(jid, [])
+
     class UserReviewsBehav(CyclicBehaviour):
         async def run(self) -> None:
-            # todo
-            pass
+            logging.info(f'{repr(self)} started')
+            if (msg := await self.receive(timeout=1000)) is not None:
+                logging.info(f'Message received: {msg.body}')
+                target_jid = json.loads(msg.body)
+                resp = reviewManagement.ReviewsResponse(to=str(msg.sender), data=self.agent.get_reviews(target_jid))
+                await self.send(resp)
