@@ -4,7 +4,6 @@ from agents.reviewCollector import ReviewCollectorAgent
 
 class ReviewCollectorFactory(AbstractFactory):
     jid_template = 'review-collector'
-    agents: list[ReviewCollectorAgent] = []
 
     @classmethod
     def create_agent(cls) -> ReviewCollectorAgent:
