@@ -101,4 +101,3 @@ class ProductVaultAgent(Agent):
                 print("Message received with content: {}".format(msg.body))
             else:
                 pass
-

@@ -3,7 +3,9 @@ import time
 from agents.informationBroker import InformationBrokerAgent
 from agents.user import UserAgent
 from agents.brokerDirectory import BrokerDirectoryAgent
+
 from agents.productVault import ProductVaultAgent
+from messages import productVaultServices, requestManagement
 
 
 def create_agent(agent_cls, jid):
@@ -19,29 +21,52 @@ if __name__ == "__main__":
     pvagent = create_agent(ProductVaultAgent, "product-vault-1@localhost")
     future = pvagent.start()
     future.result()  # wait for receiver agent to be prepared.
-    useragent = UserAgent("user1@localhost", "aasd")
-    useragent.start()
+    useragent1 = UserAgent("user1@localhost", "aasd")
+    useragent1.start()
+    useragent2 = UserAgent("user2@localhost", "aasd")
+    useragent2.start()
 
-    # useragent.add_behaviour(useragent.VaultOffersReqBehav())
+    # get request list test
+    # useragent1.add_behaviour(useragent1.AskForRequestsBehav())
 
-    # useragent.add_behaviour(useragent.VaultCategoriesReqBehav())
+    # add request test
+    # useragent1.set("new_request", {'category': 'book', 'comment': 'The Lord of the Rings'})
+    # useragent1.add_behaviour(useragent1.AddRequestBehav())
 
-    useragent.set("vault_add_product_data", {'category': 1,
-                                             'comment': 'Black pepper',
-                                             'location': 'Korytko na parterze'})
-    useragent.add_behaviour(useragent.VaultAddBehav())
+    # accept request test
+    # print(rragent.get("requests"))
+    # useragent2.set("request_to_accept", 1)
+    # useragent2.add_behaviour(useragent2.AcceptBehav())
 
-    # useragent.set("vault_get_product_data", {'id': 0})
-    # useragent.add_behaviour(useragent.VaultGetReqBehav())
+    # cancel request test
+    # useragent2.set("request_to_cancel", "f9a4be60598dac4d8c28157c2a342cff4e3caed484fc27bab97be2790d75caa5")
+    # useragent2.add_behaviour(useragent1.CancelBehav())
+    # #
+    # useragent1 = UserAgent("user1@localhost", "aasd")
+    # useragent1.start()
+    #
+    # useragent1.add_behaviour(useragent1.VaultOffersReqBehav())
+    #
+    # useragent1.add_behaviour(useragent1.VaultCategoriesReqBehav())
 
-    # useragent.add_behaviour(useragent.VaultOffersReqBehav())
+    # useragent1.set("vault_add_product_data", {'category': 1,
+    #                                          'comment': 'Black pepper',
+    #                                          'location': 'Korytko na parterze'})
+    # useragent1.add_behaviour(useragent1.VaultAddBehav())
+    #
+    # useragent1.set("vault_get_product_data", {'id': 0})
+    # useragent1.add_behaviour(useragent1.VaultGetReqBehav())
+    #
+    # useragent1.add_behaviour(useragent1.VaultOffersReqBehav())
 
     while rragent.is_alive() or pvagent.is_alive():
         try:
             time.sleep(1)
         except KeyboardInterrupt:
-            useragent.stop()
+            useragent1.stop()
+            useragent2.stop()
             rragent.stop()
             pvagent.stop()
+            bd_agent.stop()
             break
     print("Agents finished")
