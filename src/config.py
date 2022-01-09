@@ -1,6 +1,8 @@
-from utils import Location
+from src.utils import Location
 
 ONTOLOGY = 'sharing'
+DOMAIN = 'localhost'
+PASSWORD = 'aasd'
 
 SERVICES = [(Location(0, 0), {
                 'information-broker': 'information-broker-1@localhost',

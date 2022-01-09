@@ -2,20 +2,27 @@ import secrets
 import json
 
 from spade.agent import Agent
-from spade.behaviour import CyclicBehaviour
+from spade.behaviour import OneShotBehaviour, CyclicBehaviour
 from spade.template import Template
 
-from messages import requestManagement
+from src.messages import requestManagement
+from src.messages import reviewManagement
 
 
 class InformationBrokerAgent(Agent):
+    review_collector_key = 'review_collector'
+
     async def setup(self):
+        self.set(self.review_collector_key, 'review-collector-0@localhost')
         self.set("requests", [{'id': 1, 'category': 'salt', 'comment': 'Himalaya salt', 'username': 'user1@localhost'},
                          {"id": "f9a4be60598dac4d8c28157c2a342cff4e3caed484fc27bab97be2790d75caa5",
                           "username": "user2@localhost", "category": "salt", "comment": "Himalaya salt"}
                          ])
         self.set("users",  [])
         self.set("categories", ["salt", "pepper"])
+
+        # [('from_': 'user0', 'to': 'user1', 'request_id': 1), ('from_': 'user1', 'to': 'user0', 'request_id': 2)
+        self.set('tokens_to_issue', [])
 
         print("ReceiverAgent started")
 
@@ -184,3 +191,19 @@ class InformationBrokerAgent(Agent):
                     print('User {} not in active users'.format(msg.sender))
                 print("Deregister Message received with content: {} {}".format(msg.body, str(msg.sender)))
 
+
+    class ReviewTokenCreationReqBehav(OneShotBehaviour):
+        async def run(self) -> None:
+            print(f'{repr(self)} running')
+            tokens_to_issue = self.agent.get('tokens_to_issue')
+            if len(tokens_to_issue) and (token_data := tokens_to_issue.pop(0)):
+                msg = reviewManagement.ReviewTokenCreation(
+                    to=self.agent.get(self.agent.review_collector_key),
+                    request_id=token_data.get('request_id'),
+                    user_ids=[token_data.get('from_'), token_data.get('to')]
+                )
+                await self.send(msg)
+                print('Message sent!')
+                self.set('tokens_to_issue', tokens_to_issue)
+            else:
+                print('No tokens to issue')

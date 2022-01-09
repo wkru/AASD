@@ -1,0 +1,4 @@
+.idea/
+prosody/certs/localhost/
+**/__pycache__/
+venv/
