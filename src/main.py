@@ -29,10 +29,10 @@ def create_agent(agent_cls: Type[Agent], jid: str) -> Agent:
 
 
 def main():
-    bd_agent = create_agent(BrokerDirectoryAgent, "broker-directory@localhost")
-    rragent = create_agent(InformationBrokerAgent, "information-broker-1@localhost")
-    pvagent = create_agent(ProductVaultAgent, "product-vault-1@localhost")
-    rcagent = create_agent(ReviewCollectorAgent, 'review-collector-1@localhost')
+    bd_agent = create_agent(BrokerDirectoryAgent, "broker-directory")
+    rragent = create_agent(InformationBrokerAgent, "information-broker-1")
+    pvagent = create_agent(ProductVaultAgent, "product-vault-1")
+    rcagent = create_agent(ReviewCollectorAgent, 'review-collector-1')
     useragent1 = create_agent(UserAgent, "user1")
     useragent2 = create_agent(UserAgent, "user2")
 
@@ -105,5 +105,5 @@ def main():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    # logging.basicConfig(level=logging.INFO)
     main()
