@@ -55,7 +55,7 @@ class InformationBrokerAgent(Agent):
 
         register_request = self.RegisterBehav()
         register_request_template = Template()
-        register_request_template.set_metadata("performative", "request")
+        register_request_template.set_metadata("performative", "subscribe")
         register_request_template.set_metadata("protocol", "register")
         self.add_behaviour(register_request, register_request_template)
 
