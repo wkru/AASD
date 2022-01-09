@@ -39,12 +39,6 @@ class ReviewCollectorAgent(Agent):
             Template(metadata=reviewManagement.Leaderboard.metadata),
         )
 
-        # review_tokens_creation_b = self.ReviewTokensCreationBehav()
-        # self.add_behaviour(
-        #     review_tokens_creation_b,
-        #     Template(metadata={'performative': 'request'})
-        # )
-
         users_reviews_b = self.UserReviewsBehav()
         self.add_behaviour(
             users_reviews_b,
