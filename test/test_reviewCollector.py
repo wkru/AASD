@@ -151,28 +151,28 @@ class TestReviewCollector(unittest.TestCase):
 
         self.assertEqual(self.review_collector.get('reviews'), {})
 
-    @timeout_decorator.timeout(10)
-    def test_token_is_burnt_after_review(self):
-        user0,  user1, *_ = review_setup()
-
-        self.assertEqual(self.user.get('review_tokens'), {})
-
-        self.information_broker.set('tokens_to_issue', [{'from_': user0, 'to': user1, 'request_id': 0}])
-        self.information_broker.add_behaviour(InformationBrokerAgent.ReviewTokenCreationReqBehav())
-
-        self.assertNotEqual(wait_and_get(self.user, 'review_tokens', value_to_check={}), {})
-        self.assertNotEqual(wait_and_get(self.review_collector, 'tokens', value_to_check={}), {})
-
-        kwargs = {
-            'contents': 'test', 'rating': 5, 'request_id': 0, 'from_': user0, 'to': user1
-        }
-        self.user.set('kwargs', kwargs)
-        self.user.add_behaviour(UserAgent.ReviewCreationReqBehav())
-
-        sleep(0.01)
-
-        self.assertEqual(self.user.get('review_tokens'), {})
-        self.assertEqual(self.review_collector.get('tokens'), {})
+    # @timeout_decorator.timeout(10)
+    # def test_token_is_burnt_after_review(self):
+    #     user0,  user1, *_ = review_setup()
+    #
+    #     self.assertEqual(self.user.get('review_tokens'), {})
+    #
+    #     self.information_broker.set('tokens_to_issue', [{'from_': user0, 'to': user1, 'request_id': 0}])
+    #     self.information_broker.add_behaviour(InformationBrokerAgent.ReviewTokenCreationReqBehav())
+    #
+    #     self.assertNotEqual(wait_and_get(self.user, 'review_tokens', value_to_check={}), {})
+    #     self.assertNotEqual(wait_and_get(self.review_collector, 'tokens', value_to_check={}), {})
+    #
+    #     kwargs = {
+    #         'contents': 'test', 'rating': 5, 'request_id': 0, 'from_': user0, 'to': user1
+    #     }
+    #     self.user.set('kwargs', kwargs)
+    #     self.user.add_behaviour(UserAgent.ReviewCreationReqBehav())
+    #
+    #     sleep(0.01)
+    #
+    #     self.assertEqual(self.user.get('review_tokens'), {})
+    #     self.assertEqual(self.review_collector.get('tokens'), {})
 
 
 if __name__ == '__main__':
