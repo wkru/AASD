@@ -7,7 +7,7 @@ import timeout_decorator
 from utils import wait_and_get, create_agent
 from src.agents.user import UserAgent
 from src.agents.reviewCollector import ReviewCollectorAgent
-from src.misc.review import Review
+from src.misc.review import Review, Token
 
 
 def review_setup():
@@ -123,13 +123,33 @@ class TestReviewCollector(unittest.TestCase):
         kwargs = {
             'contents': 'test', 'rating': 5, 'request_id': 1, 'from_': user0, 'to': user1
         }
+        token = Token(request_id=1, user_ids=[user0, user1])
         self.user.set('kwargs', kwargs)
+        self.user.set('review_tokens', {1: token})
+        self.user.add_behaviour(UserAgent.ReviewCreationReqBehav())
+
+        new_review = Review(**kwargs)
+
+        sleep(0.01)
+
+        self.assertEqual(self.review_collector.get('reviews')[user1], old_reviews + [new_review])
+
+    def test_invalid_token(self):
+        user0,  user1, *_ = review_setup()
+        kwargs = {
+            'contents': 'test', 'rating': 5, 'request_id': 1, 'from_': user0, 'to': user1
+        }
+        token = Token(request_id=10, user_ids=[user0, user1])
+        self.user.set('kwargs', kwargs)
+        self.user.set('review_tokens', {1: token})
         self.user.add_behaviour(UserAgent.ReviewCreationReqBehav())
 
         sleep(0.01)
 
-        new_review = Review(**kwargs)
-        self.assertEqual(self.review_collector.get('reviews')[user1], old_reviews + [new_review])
+        self.assertEqual(self.review_collector.get('reviews'), {})
+
+    def test_token_is_burnt_after_review(self):
+        pass
 
 
 if __name__ == '__main__':

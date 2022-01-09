@@ -101,12 +101,15 @@ class UserAgent(Agent):
             print(f'{repr(self)} running')
             kwargs = self.agent.get('kwargs')
             self.agent.set('kwargs', None)
-            msg = reviewManagement.ReviewCreation(
-                to=self.agent.get(self.agent.review_collector_key),
-                data=kwargs
-            )
-            await self.send(msg)
-            print('Message sent!')
+
+            if (token := self.agent.get('review_tokens').get(kwargs.get('request_id'))) is not None:
+                msg = reviewManagement.ReviewCreation(
+                    to=self.agent.get(self.agent.review_collector_key),
+                    kwargs=kwargs,
+                    token=token,
+                )
+                await self.send(msg)
+                print('Message sent!')
 
     class ReviewTokenRespBehav(CyclicBehaviour):
         async def run(self) -> None:

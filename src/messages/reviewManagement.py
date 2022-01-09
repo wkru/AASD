@@ -40,7 +40,8 @@ class ReviewsResponse(Message):
 class ReviewCreation(Message):
     metadata = {'performative': 'request', 'protocol': 'review-collector-review-creation'}
 
-    def __init__(self, to, data):
+    def __init__(self, to, kwargs, token):
+        data = (kwargs, token.__dict__)
         body = json.dumps(data)
         super().__init__(to=to, body=body, metadata=dict(self.metadata, **{'ontology': ONTOLOGY}))
 
