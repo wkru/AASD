@@ -11,9 +11,9 @@ from messages import productVaultServices
 class ProductVaultAgent(Agent):
     async def setup(self):
 
-        self.offers = {0: {'category': 1, 'comment': 'A bag of salt', 'location': 'Szatnia WEiTI'}}
-        self.categories = ['Salt', 'Pepper']
-        self.next_offer_id = len(self.offers)
+        self.set('offers', {0: {'category': 'Salt', 'comment': 'A bag of salt', 'location': 'Szatnia WEiTI'}})
+        self.set('categories', ['Salt', 'Pepper', 'Sugar'])
+        self.set('next_offer_id', len(self.get('offers')))
 
         offers_b = self.OffersBehav()
         offers_req_template = Template()
@@ -44,7 +44,7 @@ class ProductVaultAgent(Agent):
         async def run(self):
             msg = await self.receive(timeout=1000)
             if msg:
-                resp = productVaultServices.OffersResponse(to=str(msg.sender), data=self.agent.offers)
+                resp = productVaultServices.OffersResponse(to=str(msg.sender), data=self.agent.get('offers'))
                 await self.send(resp)
 
 
@@ -52,7 +52,7 @@ class ProductVaultAgent(Agent):
         async def run(self):
             msg = await self.receive(timeout=1000)
             if msg:
-                resp = productVaultServices.CategoriesResponse(to=str(msg.sender), data=self.agent.categories)
+                resp = productVaultServices.CategoriesResponse(to=str(msg.sender), data=self.agent.get('categories'))
                 await self.send(resp)
 
     class AddBehav(CyclicBehaviour):
@@ -63,9 +63,9 @@ class ProductVaultAgent(Agent):
                     msg_contents = json.loads(msg.body)
                     assert {'category', 'comment', 'location'} == set(msg_contents.keys())
                     assert msg_contents['category'] >= 0
-                    assert msg_contents['category'] < len(self.agent.categories)
-                    self.agent.offers[self.agent.next_offer_id] = msg_contents
-                    self.agent.next_offer_id += 1
+                    assert msg_contents['category'] < len(self.agent.get('categories'))
+                    self.agent.get('offers')[self.agent.get('next_offer_id')] = msg_contents
+                    self.agent.set('next_offer_id', self.agent.get('next_offer_id') + 1)
                 except:
                     logging.info('Malformed AddToProductVault message received')
 
@@ -78,9 +78,12 @@ class ProductVaultAgent(Agent):
                     msg_contents = json.loads(msg.body)
                     assert {'id'} == set(msg_contents.keys())
                     received_id = int(msg_contents['id'])
-                    assert received_id in self.agent.offers.keys()
+                    assert received_id in self.agent.get('offers').keys()
+                    offers = self.agent.get('offers')
+                    offer = offers.pop(received_id)
+                    self.agent.set('offers', offers)
                     resp = productVaultServices.GetProductResponse(to=str(msg.sender),
-                                                                   data=self.agent.offers.pop(received_id))
+                                                                   data=offer)
 
                     await self.send(resp)
                 except:

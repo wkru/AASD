@@ -1,24 +1,21 @@
 from typing import Optional
-
+from agents.productVault import ProductVaultAgent
 from agents.informationBroker import InformationBrokerAgent
 from agents.user import UserAgent
-from agents.brokerDirectory import BrokerDirectoryAgent
-
-from agents.productVault import ProductVaultAgent
 
 from misc.review import Token
-
-from utils import Location
+from src.misc.location import Location
 
 users = []
 active_user: Optional[UserAgent] = None
 next_user_id = 0
 new_user_added = False
 
-
-def custom_input(prompt='Wpisz numer', cls=int):
+def custom_input(prompt='Wpisz numer', cls=int, cancel=True):
     while True:
         inp = input(prompt + ': ')
+        if cancel and inp == '/':
+            return None
         try:
             res = cls(inp)
             break
@@ -27,22 +24,27 @@ def custom_input(prompt='Wpisz numer', cls=int):
 
     return res
 
-
-def print_menu(options, prompt='Wybierz dostępną opcję:'):
+def print_menu(options, prompt='Wybierz dostępną opcję:', cancel=True):
     print('\n' + prompt)
+    if cancel:
+        print('/ Anuluj')
     i = 0
     for i, option in enumerate(options):
         print(i, option[0])
-    chosen = custom_input()
+    chosen = custom_input(cancel=cancel)
 
-    if chosen >= len(options):
-        print('Wpisany numer jest niepoprawny.')
-        return print_menu(options, prompt)
+    if chosen is None:
+        return None
+
     return i, options[chosen]
 
 
-def execute_from_menu(options, prompt='Wybierz dostępną opcję:'):
-    (_, chosen) = print_menu(options, prompt)
+def execute_from_menu(options, prompt='Wybierz dostępną opcję:', cancel=True):
+    ret = print_menu(options, prompt, cancel)
+    if ret is None:
+        return ret
+
+    chosen = ret[1]
 
     if chosen[2] is None:
         chosen[1]()
@@ -66,13 +68,16 @@ def add_new_user():
     global next_user_id, new_user_added
     new_user_added = True
     username = input('Podaj nazwę użytkownika: ')
-    x = custom_input('Podaj współrzędną x użytkownika')
-    y = custom_input('Podaj współrzędną y użytkownika')
+    x = custom_input('Podaj współrzędną x użytkownika', float, cancel=False)
+    y = custom_input('Podaj współrzędną y użytkownika', float, cancel=False)
+    phone = input('Podaj numer telefonu użytkownika: ')
+    email = input('Podaj adres e-mail użytkownika: ')
     useragent1 = UserAgent('user' + str(next_user_id) + '@localhost', "aasd")
     next_user_id += 1
     useragent1.start()
     users.append((username, useragent1))
     useragent1.set('location', Location(x, y))
+    useragent1.set("contact_data", {'phone': phone, "email": email})
     useragent1.add_behaviour(UserAgent.ServicesReqBehav())
 
 
@@ -98,7 +103,7 @@ def choose_category(vault=False):
         for category in category_list:
             options.append([category])
         (i, _) = print_menu(options, 'Wybierz kategorię z listy:')
-        return i
+        return options[i]
     except:
         print('Błąd pobierania kategorii!')
         return None
@@ -269,4 +274,4 @@ def run():
         if active_user is None:
             change_user()
         else:
-            execute_from_menu(main_options)
+            execute_from_menu(main_options, cancel=False)

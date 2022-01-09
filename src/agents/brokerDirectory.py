@@ -6,9 +6,9 @@ from spade.behaviour import CyclicBehaviour
 from spade.template import Template
 
 from config import SERVICES
-from utils import Location
 
 from messages import serviceDiscovery
+from src.misc.location import Location
 
 class BrokerDirectoryAgent(Agent):
     async def setup(self):
