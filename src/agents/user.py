@@ -27,7 +27,7 @@ class UserAgent(Agent):
         incoming_request_template.set_metadata("protocol", "addition")
         self.add_behaviour(incoming_request, incoming_request_template)
 
-        recv_request_list = self.RecvRequestListBehav()
+        recv_request_list = self.RecvBehav()
         recv_request_list_template = Template()
         recv_request_list_template.set_metadata("performative", "inform")
         recv_request_list_template.set_metadata("protocol", "user_requests")
