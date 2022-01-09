@@ -1,5 +1,4 @@
 import time
-import logging
 from typing import Type
 
 from spade.agent import Agent
@@ -9,13 +8,7 @@ from agents.user import UserAgent
 from agents.brokerDirectory import BrokerDirectoryAgent
 from agents.reviewCollector import ReviewCollectorAgent
 
-from factories.abstractFactory import AbstractFactory
-from factories.reviewCollector import ReviewCollectorFactory
-
 from agents.productVault import ProductVaultAgent
-from messages import productVaultServices, requestManagement
-
-from utils import Location
 
 import ui
 
@@ -33,6 +26,9 @@ def main():
     rragent = create_agent(InformationBrokerAgent, "information-broker-1")
     pvagent = create_agent(ProductVaultAgent, "product-vault-1")
     rcagent = create_agent(ReviewCollectorAgent, 'review-collector-1')
+    rragent2 = create_agent(InformationBrokerAgent, "information-broker-2")
+    pvagent2 = create_agent(ProductVaultAgent, "product-vault-2")
+    rcagent2 = create_agent(ReviewCollectorAgent, 'review-collector-2')
     useragent1 = create_agent(UserAgent, "user1")
     useragent2 = create_agent(UserAgent, "user2")
 

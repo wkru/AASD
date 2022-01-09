@@ -1,4 +1,4 @@
-from utils import Location
+from src.misc.location import Location
 
 import json
 

@@ -1,12 +1,6 @@
-from agents.informationBroker import InformationBrokerAgent
 from agents.user import UserAgent
-from agents.brokerDirectory import BrokerDirectoryAgent
 
-from agents.productVault import ProductVaultAgent
-
-from utils import Location
-
-from queue import Queue
+from src.misc.location import Location
 
 users = []
 active_user = None
@@ -69,11 +63,14 @@ def add_new_user():
     username = input('Podaj nazwę użytkownika: ')
     x = custom_input('Podaj współrzędną x użytkownika', float, cancel=False)
     y = custom_input('Podaj współrzędną y użytkownika', float, cancel=False)
+    phone = input('Podaj numer telefonu użytkownika: ')
+    email = input('Podaj adres e-mail użytkownika: ')
     useragent1 = UserAgent('user' + str(next_user_id) + '@localhost', "aasd")
     next_user_id += 1
     useragent1.start()
     users.append((username, useragent1))
     useragent1.set('location', Location(x, y))
+    useragent1.set("contact_data", {'phone': phone, "email": email})
     useragent1.add_behaviour(UserAgent.ServicesReqBehav())
 
 def set_active_user(num):
@@ -212,10 +209,3 @@ def run():
             change_user()
         else:
             execute_from_menu(main_options, cancel=False)
-
-
-
-
-
-
-

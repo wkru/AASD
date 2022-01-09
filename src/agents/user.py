@@ -21,7 +21,6 @@ class UserAgent(Agent):
         self.set('review_tokens', {})
 
         # self.set("new_request", {'category': 'salt', 'comment': 'Himalaya salt'})
-        self.set("contact_data", {'phone': "000-000-000", "email": "test@test.pl"})
         self.set("notifications", [{'id': 'f9a4be60598dac4d8c28157c2a342cff4e3caed484fc27bab97be2790d75caa5',
                                     'category': 'salt', 'comment': 'Himalaya salt'}])
         self.set('queue', Queue(1))
