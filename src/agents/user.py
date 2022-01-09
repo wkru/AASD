@@ -4,7 +4,7 @@ from spade.agent import Agent
 from spade.behaviour import OneShotBehaviour, CyclicBehaviour
 from spade.template import Template
 
-from messages import requestManagement, reviewManagement
+from src.messages import requestManagement, reviewManagement
 
 
 class UserAgent(Agent):

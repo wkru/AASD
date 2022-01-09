@@ -4,9 +4,9 @@ import json
 import timeout_decorator
 
 import utils
-from agents.user import UserAgent
-from agents.reviewCollector import ReviewCollectorAgent
-from misc.review import Review
+from src.agents.user import UserAgent
+from src.agents.reviewCollector import ReviewCollectorAgent
+from src.misc.review import Review
 
 
 def review_setup():

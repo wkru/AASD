@@ -3,9 +3,11 @@ import logging
 from typing import Type
 
 from spade.agent import Agent
+
 from agents.informationBroker import InformationBrokerAgent
 from agents.user import UserAgent
 from agents.brokerDirectory import BrokerDirectoryAgent
+from agents.reviewCollector import ReviewCollectorAgent
 
 from factories.abstractFactory import AbstractFactory
 from factories.reviewCollector import ReviewCollectorFactory

@@ -3,7 +3,7 @@ from typing import Type
 
 from spade.agent import Agent
 
-from config import DOMAIN, PASSWORD
+from src.config import DOMAIN, PASSWORD
 
 
 class AbstractFactory(ABC):

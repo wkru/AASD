@@ -2,8 +2,8 @@ import json
 
 from spade.message import Message
 
-from config import ONTOLOGY
-from misc.review import Review
+from src.config import ONTOLOGY
+from src.misc.review import Review
 
 
 class Leaderboard(Message):

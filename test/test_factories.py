@@ -1,7 +1,7 @@
 import unittest
 
-from factories.reviewCollector import ReviewCollectorFactory
-from config import DOMAIN
+from src.factories.reviewCollector import ReviewCollectorFactory
+from src.config import DOMAIN
 
 
 class TestFactories(unittest.TestCase):

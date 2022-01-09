@@ -1,5 +1,5 @@
-from factories.abstractFactory import AbstractFactory
-from agents.reviewCollector import ReviewCollectorAgent
+from src.factories.abstractFactory import AbstractFactory
+from src.agents.reviewCollector import ReviewCollectorAgent
 
 
 class ReviewCollectorFactory(AbstractFactory):

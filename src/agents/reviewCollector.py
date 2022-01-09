@@ -4,8 +4,8 @@ from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour, OneShotBehaviour, PeriodicBehaviour
 from spade.template import Template
 
-from messages import reviewManagement
-from misc.review import Review
+from src.messages import reviewManagement
+from src.misc.review import Review
 
 
 class ReviewCollectorAgent(Agent):
