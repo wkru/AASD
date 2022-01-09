@@ -1,9 +1,12 @@
 from dataclasses import dataclass
 
 
-@dataclass
 class ReviewToken:
-    hash_: int
+    def __init__(self, request_id: int, user_ids: list):
+        self.hash_ = hash(str(request_id) + str(user_ids))
+
+    def __eq__(self, other):
+        return self.hash_ == other.hash_
 
 
 @dataclass

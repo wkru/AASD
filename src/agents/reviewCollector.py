@@ -5,12 +5,13 @@ from spade.behaviour import CyclicBehaviour, OneShotBehaviour, PeriodicBehaviour
 from spade.template import Template
 
 from src.messages import reviewManagement
-from src.misc.review import Review
+from src.misc.review import Review, ReviewToken
 
 
 class ReviewCollectorAgent(Agent):
     def init(self):
-        self.tokens = []
+        # request_id -> token
+        self.set('tokens', {})
 
         if self.get('reviews') is None:
             self.set('reviews', {})
@@ -56,6 +57,12 @@ class ReviewCollectorAgent(Agent):
             Template(metadata=reviewManagement.ReviewCreation.metadata)
         )
 
+        review_token_creation_b = self.ReviewTokenCreationBehav()
+        self.add_behaviour(
+            review_token_creation_b,
+            Template(metadata=reviewManagement.ReviewTokenCreation.metadata)
+        )
+
     # class SendTokenExpiredInfoBehav(OneShotBehaviour):
     #     async def run(self) -> None:
     #         # todo
@@ -68,11 +75,6 @@ class ReviewCollectorAgent(Agent):
                 print(f'Message received: {msg.body}')
                 resp = reviewManagement.LeaderboardResponse(to=str(msg.sender), data=self.agent.get('leaderboard'))
                 await self.send(resp)
-
-    class ReviewTokensCreationBehav(CyclicBehaviour):
-        async def run(self) -> None:
-            # todo
-            pass
 
     def get_reviews(self, jid: str) -> list[Review]:
         return self.get('reviews').get(jid, [])
@@ -104,4 +106,17 @@ class ReviewCollectorAgent(Agent):
                 else:
                     print(f'Review creation failed: {kwargs}')
 
-
+    class ReviewTokenCreationBehav(CyclicBehaviour):
+        async def run(self) -> None:
+            print(f'{repr(self)} started')
+            if (msg := await self.receive(timeout=1000)) is not None:
+                print(f'Message received: {msg.body}')
+                token_data = json.loads(msg.body)
+                request_id = token_data.get('request_id')
+                user_ids = token_data.get('user_ids')
+                token = ReviewToken(request_id, user_ids)
+                tokens = self.get('tokens')
+                if tokens.get(request_id) is None:
+                    tokens[request_id] = token
+                    self.set('tokens', tokens)
+                    print('Token list updated')

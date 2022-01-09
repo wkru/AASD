@@ -99,3 +99,10 @@ class UserAgent(Agent):
             )
             await self.send(msg)
             print('Message sent!')
+
+    class ReviewTokenRespBehav(CyclicBehaviour):
+        async def run(self) -> None:
+            print(f'{repr(self)} running')
+            if (msg := await self.receive(timeout=1000)) is not None:
+                print(f'Message received: {msg.body}')
+                self.agent.set('last_received_msg', msg)
