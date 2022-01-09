@@ -110,6 +110,10 @@ class UserAgent(Agent):
                 )
                 await self.send(msg)
                 print('Message sent!')
+                tokens = self.agent.get('review_tokens')
+                del tokens[kwargs.get('request_id')]
+                self.agent.set('review_tokens', tokens)
+                print(f'Token deleted: {token}')
 
     class ReviewTokenRespBehav(CyclicBehaviour):
         async def run(self) -> None:

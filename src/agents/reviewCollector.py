@@ -95,12 +95,10 @@ class ReviewCollectorAgent(Agent):
         self.set('reviews', reviews)
 
     class ReviewCreationBehav(CyclicBehaviour):
-        @staticmethod
-        def are_valid_kwargs(kwargs, token: Token) -> bool:
+        def are_valid_kwargs(self, kwargs, token: Token) -> bool:
             can_create_review = {'contents', 'rating', 'request_id', 'from_', 'to'}.issubset(kwargs.keys())
             request_id = kwargs.get('request_id')
-            user_ids = [kwargs.get('from_'), kwargs.get('to')]
-            valid = Token(request_id, user_ids) == token
+            valid = self.agent.get('tokens').get(request_id, None) == token
             return can_create_review and valid
 
         async def run(self) -> None:
@@ -112,6 +110,10 @@ class ReviewCollectorAgent(Agent):
                 if self.are_valid_kwargs(kwargs, token):
                     self.agent.create_review(**kwargs)
                     print(f'Review created: {kwargs}')
+                    tokens = self.agent.get('tokens')
+                    del tokens[token.request_id]
+                    self.agent.set('tokens', tokens)
+                    print(f'Token deleted: {token}')
                 else:
                     print(f'Review creation failed: {kwargs}')
 

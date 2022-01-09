@@ -7,6 +7,8 @@ class Token:
         self.hash_ = hash(str(request_id) + str(user_ids))
 
     def __eq__(self, other):
+        if other is None:
+            return False
         return self.hash_ == other.hash_
 
     @classmethod

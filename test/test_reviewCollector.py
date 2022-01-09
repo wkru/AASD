@@ -7,6 +7,7 @@ import timeout_decorator
 from utils import wait_and_get, create_agent
 from src.agents.user import UserAgent
 from src.agents.reviewCollector import ReviewCollectorAgent
+from src.agents.informationBroker import InformationBrokerAgent
 from src.misc.review import Review, Token
 
 
@@ -33,9 +34,9 @@ class TestReviewCollector(unittest.TestCase):
     def setUp(self) -> None:
         self.agents = []
         self.review_collector = create_agent(ReviewCollectorAgent, 'review-collector-0')
+        self.information_broker = create_agent(InformationBrokerAgent, 'information-broker-0')
         self.user = create_agent(UserAgent, 'user0')
-        self.agents.append(self.review_collector)
-        self.agents.append(self.user)
+        self.agents.extend([self.review_collector, self.user, self.information_broker])
 
         for a in self.agents:
             future = a.start()
@@ -126,6 +127,7 @@ class TestReviewCollector(unittest.TestCase):
         token = Token(request_id=1, user_ids=[user0, user1])
         self.user.set('kwargs', kwargs)
         self.user.set('review_tokens', {1: token})
+        self.review_collector.set('tokens', {1: token})
         self.user.add_behaviour(UserAgent.ReviewCreationReqBehav())
 
         new_review = Review(**kwargs)
@@ -134,6 +136,7 @@ class TestReviewCollector(unittest.TestCase):
 
         self.assertEqual(self.review_collector.get('reviews')[user1], old_reviews + [new_review])
 
+    @timeout_decorator.timeout(10)
     def test_invalid_token(self):
         user0,  user1, *_ = review_setup()
         kwargs = {
@@ -148,8 +151,28 @@ class TestReviewCollector(unittest.TestCase):
 
         self.assertEqual(self.review_collector.get('reviews'), {})
 
+    @timeout_decorator.timeout(10)
     def test_token_is_burnt_after_review(self):
-        pass
+        user0,  user1, *_ = review_setup()
+
+        self.assertEqual(self.user.get('review_tokens'), {})
+
+        self.information_broker.set('tokens_to_issue', [{'from_': user0, 'to': user1, 'request_id': 0}])
+        self.information_broker.add_behaviour(InformationBrokerAgent.ReviewTokenCreationReqBehav())
+
+        self.assertNotEqual(wait_and_get(self.user, 'review_tokens', value_to_check={}), {})
+        self.assertNotEqual(wait_and_get(self.review_collector, 'tokens', value_to_check={}), {})
+
+        kwargs = {
+            'contents': 'test', 'rating': 5, 'request_id': 0, 'from_': user0, 'to': user1
+        }
+        self.user.set('kwargs', kwargs)
+        self.user.add_behaviour(UserAgent.ReviewCreationReqBehav())
+
+        sleep(0.01)
+
+        self.assertEqual(self.user.get('review_tokens'), {})
+        self.assertEqual(self.review_collector.get('tokens'), {})
 
 
 if __name__ == '__main__':
