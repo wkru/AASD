@@ -4,14 +4,14 @@ from typing import Type
 
 from spade.agent import Agent
 
-from agents.informationBroker import InformationBrokerAgent
-from agents.user import UserAgent
-from agents.brokerDirectory import BrokerDirectoryAgent
-from agents.reviewCollector import ReviewCollectorAgent
+from src.agents.informationBroker import InformationBrokerAgent
+from src.agents.user import UserAgent
+from src.agents.brokerDirectory import BrokerDirectoryAgent
+from src.agents.reviewCollector import ReviewCollectorAgent
 
-from agents.productVault import ProductVaultAgent
+from src.agents.productVault import ProductVaultAgent
 
-import ui
+from src import ui
 
 agents: list[Agent] = []
 

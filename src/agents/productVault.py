@@ -5,7 +5,7 @@ from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
 from spade.template import Template
 
-from messages import productVaultServices
+from src.messages import productVaultServices
 
 
 class ProductVaultAgent(Agent):

@@ -1,9 +1,7 @@
 from typing import Optional
-from agents.productVault import ProductVaultAgent
-from agents.informationBroker import InformationBrokerAgent
-from agents.user import UserAgent
+from src.agents.user import UserAgent
 
-from misc.review import Token
+from src.misc.review import Token
 from src.misc.location import Location
 
 from spade import quit_spade
