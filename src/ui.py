@@ -98,7 +98,7 @@ def choose_category(vault=False):
         for category in category_list:
             options.append([category])
         (i, _) = print_menu(options, 'Wybierz kategorię z listy:')
-        return i
+        return options[i]
     except:
         print('Błąd pobierania kategorii!')
         return None
