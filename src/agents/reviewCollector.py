@@ -29,17 +29,17 @@ class ReviewCollectorAgent(Agent):
                 counts[rating] = counts.get(rating, 0) + 1
             return counts
 
-        def calculate_weighted_average_rating(rating_counts: dict) -> float:
-            sum_ratings = 0
+        def calculate_final_rating(rating_counts: dict) -> float:
+            # map ratings [1, 2, 3, 4, 5] to [-2, -1, 0, 1, 2] and sum them
+            final_rating = 0
             for rating, count in rating_counts.items():
-                sum_ratings += rating * count
-            sum_counts = sum(rating_counts.values())
-            return sum_ratings / sum_counts
+                final_rating += (rating - 3) * count
+            return final_rating
 
         reviews = self.get('reviews')
         user_ratings = {}
         for user, review_list in reviews.items():
-            user_ratings[user] = calculate_weighted_average_rating(count_ratings(review_list))
+            user_ratings[user] = calculate_final_rating(count_ratings(review_list))
         ordered = collections.OrderedDict(sorted(user_ratings.items(), key=lambda t: t[1], reverse=True))
         self.set('leaderboard', list(ordered.keys())[:25])
 
