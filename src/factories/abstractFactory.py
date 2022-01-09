@@ -8,21 +8,20 @@ from config import DOMAIN, PASSWORD
 
 class AbstractFactory(ABC):
     jid_template: str
-    cur_id: int = 0
 
-    @classmethod
-    def _generate_jid(cls, id: int) -> str:
-        return f'{cls.jid_template}-{id}@{DOMAIN}'
+    def __init__(self):
+        self.cur_id: int = 0
 
-    @classmethod
-    def _create_agent(cls, agent_cls: Type[Agent]):
-        agent = agent_cls(cls._generate_jid(cls.cur_id), PASSWORD)
-        cls.cur_id += 1
+    def _generate_jid(self, id: int) -> str:
+        return f'{self.jid_template}-{id}@{DOMAIN}'
+
+    def _create_agent(self, agent_cls: Type[Agent]):
+        agent = agent_cls(self._generate_jid(self.cur_id), PASSWORD)
+        self.cur_id += 1
         return agent
 
-    @classmethod
     @abstractmethod
-    def create_agent(cls):
+    def create_agent(self):
         pass
 
 

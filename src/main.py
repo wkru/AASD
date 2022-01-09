@@ -20,17 +20,14 @@ def create_agent(agent_cls: Type[Agent], jid: str) -> Agent:
     return agent
 
 
-def create_via_factory(factory_cls: Type[AbstractFactory]) -> Agent:
-    agent = factory_cls.create_agent()
-    agents.append(agent)
-    return agent
-
-
 def main():
     ib_agent = create_agent(InformationBrokerAgent, "information-broker-1")
     create_agent(BrokerDirectoryAgent, "broker-directory")
-    create_via_factory(ReviewCollectorFactory)
-    create_agent(UserAgent, "user1")
+    # review_collector = create_via_factory(ReviewCollectorFactory)
+    user0 = create_agent(UserAgent, "user0")
+    review_collector = create_agent(ReviewCollectorAgent, "review-collector-0")
+
+    # self.assertEqual(msg.body, leaderboard)
 
     for a in agents:
         if isinstance(a, InformationBrokerAgent):
