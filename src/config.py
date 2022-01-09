@@ -1,4 +1,4 @@
-from utils import Location
+from src.utils import Location
 
 ONTOLOGY = 'sharing'
 DOMAIN = 'localhost'

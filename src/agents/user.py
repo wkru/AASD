@@ -9,6 +9,7 @@ from src.misc.review import Token
 
 from src.config import BROKER_DIRECTORY_JID
 
+
 class UserAgent(Agent):
     review_collector_key = 'review_collector'
 
