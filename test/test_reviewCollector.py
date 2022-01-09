@@ -4,7 +4,7 @@ from time import sleep
 
 import timeout_decorator
 
-import utils
+from utils import wait_and_get, create_agent
 from src.agents.user import UserAgent
 from src.agents.reviewCollector import ReviewCollectorAgent
 from src.misc.review import Review
@@ -27,10 +27,6 @@ def review_setup():
         user2: [],
     }
     return user0, user1, user2, reviews
-
-
-def create_agent(agent_cls, jid):
-    return agent_cls(f'{jid}@localhost', 'aasd')
 
 
 class TestReviewCollector(unittest.TestCase):
@@ -57,7 +53,7 @@ class TestReviewCollector(unittest.TestCase):
         self.review_collector.set('leaderboard', leaderboard)
         self.user.add_behaviour(UserAgent.LeaderboardReqBehav())
 
-        msg = utils.wait_and_get(self.user, 'last_received_msg')
+        msg = wait_and_get(self.user, 'last_received_msg')
 
         self.assertEqual(json.loads(msg.body), leaderboard)
 
@@ -69,7 +65,7 @@ class TestReviewCollector(unittest.TestCase):
         self.user.set('target_jid', user2)
         self.user.add_behaviour(UserAgent.ReviewsReqBehav())
 
-        msg = utils.wait_and_get(self.user, 'last_received_msg')
+        msg = wait_and_get(self.user, 'last_received_msg')
 
         self.assertEqual(json.loads(msg.body), reviews[user2])
 
@@ -89,7 +85,7 @@ class TestReviewCollector(unittest.TestCase):
         self.user.set('target_jid', user0)
         self.user.add_behaviour(UserAgent.ReviewsReqBehav())
 
-        msg = utils.wait_and_get(self.user, 'last_received_msg')
+        msg = wait_and_get(self.user, 'last_received_msg')
         obj = json.loads(msg.body, object_hook=lambda d: Review(**d))
         self.assertEqual(obj, reviews[user0])
 
