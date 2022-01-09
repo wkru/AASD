@@ -1,4 +1,5 @@
 import json
+import logging
 import collections
 
 from spade.agent import Agent
@@ -29,22 +30,22 @@ class ReviewCollectorAgent(Agent):
                 counts[rating] = counts.get(rating, 0) + 1
             return counts
 
-        def calculate_weighted_average_rating(rating_counts: dict) -> float:
-            sum_ratings = 0
+        def calculate_final_rating(rating_counts: dict) -> float:
+            # map ratings [1, 2, 3, 4, 5] to [-2, -1, 0, 1, 2] and sum them
+            final_rating = 0
             for rating, count in rating_counts.items():
-                sum_ratings += rating * count
-            sum_counts = sum(rating_counts.values())
-            return sum_ratings / sum_counts
+                final_rating += (rating - 3) * count
+            return final_rating
 
         reviews = self.get('reviews')
         user_ratings = {}
         for user, review_list in reviews.items():
-            user_ratings[user] = calculate_weighted_average_rating(count_ratings(review_list))
+            user_ratings[user] = calculate_final_rating(count_ratings(review_list))
         ordered = collections.OrderedDict(sorted(user_ratings.items(), key=lambda t: t[1], reverse=True))
         self.set('leaderboard', list(ordered.keys())[:25])
 
     async def setup(self):
-        print(f'{repr(self)} started')
+        logging.info(f'{repr(self)} started')
         self.init()
 
         leaderboard_b = self.LeaderboardBehav()
@@ -73,9 +74,9 @@ class ReviewCollectorAgent(Agent):
 
     class LeaderboardBehav(CyclicBehaviour):
         async def run(self) -> None:
-            print(f'{repr(self)} started')
+            logging.info(f'{repr(self)} started')
             if (msg := await self.receive(timeout=1000)) is not None:
-                print(f'Message received: {msg.body}')
+                logging.info(f'Message received: {msg.body}')
                 resp = reviewManagement.LeaderboardResponse(to=str(msg.sender), data=self.agent.get('leaderboard'))
                 await self.send(resp)
 
@@ -84,16 +85,16 @@ class ReviewCollectorAgent(Agent):
 
     class ReviewsBehav(CyclicBehaviour):
         async def run(self) -> None:
-            print(f'{repr(self)} started')
+            logging.info(f'{repr(self)} started')
             if (msg := await self.receive(timeout=1000)) is not None:
-                print(f'Message received: {msg.body}')
+                logging.info(f'Message received: {msg.body}')
                 target_jid = json.loads(msg.body)
                 resp = reviewManagement.ReviewsResponse(to=str(msg.sender), data=self.agent.get_reviews(target_jid))
                 await self.send(resp)
 
     def create_review(self, contents: str, rating: int, request_id: int, from_: str, to: str) -> None:
         if rating not in [1, 2, 3, 4, 5]:
-            print(f'Invalid rating: {rating}')
+            logging.info(f'Invalid rating: {rating}')
             return
         new_review = Review(contents, rating, request_id, from_, to)
         reviews = self.get('reviews')
@@ -108,24 +109,24 @@ class ReviewCollectorAgent(Agent):
             return can_create_review and valid
 
         async def run(self) -> None:
-            print(f'{repr(self)} started')
+            logging.info(f'{repr(self)} started')
             if (msg := await self.receive(timeout=1000)) is not None:
-                print(f'Message received: {msg.body}')
+                logging.info(f'Message received: {msg.body}')
                 kwargs, token_dct = json.loads(msg.body)
                 token = Token.from_dict(token_dct)
                 if self.are_valid_kwargs(kwargs, token):
                     self.agent.create_review(**kwargs)
-                    print(f'Review created: {kwargs}')
+                    logging.info(f'Review created: {kwargs}')
 
                     self.agent.update_leaderboard()
-                    print('Leaderboard updated')
+                    logging.info('Leaderboard updated')
 
                     tokens = self.agent.get('tokens')
                     del tokens[token.request_id]
                     self.agent.set('tokens', tokens)
-                    print(f'Token deleted: {token}')
+                    logging.info(f'Token deleted: {token}')
                 else:
-                    print(f'Review creation failed: {kwargs}')
+                    logging.info(f'Review creation failed: {kwargs}')
 
     class ReviewTokenCreationBehav(CyclicBehaviour):
         async def send_tokens(self, token: Token, jids: list[str]) -> None:
@@ -134,20 +135,21 @@ class ReviewCollectorAgent(Agent):
                 await self.send(msg)
 
         async def run(self) -> None:
-            print(f'{repr(self)} started')
+            logging.info(f'{repr(self)} started')
             if (msg := await self.receive(timeout=1000)) is not None:
-                print(f'Message received: {msg.body}')
+                logging.info(f'Message received: {msg.body}')
 
                 token_data = json.loads(msg.body)
                 request_id = token_data.get('request_id')
-                user_ids = token_data.get('user_ids')
+                from_ = token_data.get('from_')
+                to = token_data.get('to')
 
-                token = Token(request_id, user_ids)
+                token = Token(request_id, from_, to)
 
                 tokens = self.get('tokens')
                 if tokens.get(request_id) is None:
                     tokens[request_id] = token
                     self.set('tokens', tokens)
-                    print('Token list updated')
-                    await self.send_tokens(token, user_ids)
-                    print(f'Tokens are sent to {user_ids}')
+                    logging.info('Token list updated')
+                    await self.send_tokens(token, [from_, to])
+                    logging.info(f'Tokens are sent to {[from_, to]}')

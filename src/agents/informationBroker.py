@@ -1,5 +1,6 @@
 import secrets
 import json
+import logging
 
 from spade.agent import Agent
 from spade.behaviour import OneShotBehaviour, CyclicBehaviour
@@ -13,7 +14,6 @@ class InformationBrokerAgent(Agent):
     review_collector_key = 'review_collector'
 
     async def setup(self):
-        self.set(self.review_collector_key, 'review-collector-0@localhost')
         self.set("requests", [{'id': 1, 'category': 'salt', 'comment': 'Himalaya salt', 'username': 'user1@localhost'},
                          {"id": "f9a4be60598dac4d8c28157c2a342cff4e3caed484fc27bab97be2790d75caa5",
                           "username": "user2@localhost", "category": "salt", "comment": "Himalaya salt"}
@@ -24,8 +24,6 @@ class InformationBrokerAgent(Agent):
         # [('from_': 'user0', 'to': 'user1', 'request_id': 1), ('from_': 'user1', 'to': 'user0', 'request_id': 2)
         self.set('tokens_to_issue', [])
 
-        print("ReceiverAgent started")
-
         user_requests = self.UserRequestsBehav()
         template = Template()
         template.set_metadata("performative", "request")
@@ -34,19 +32,19 @@ class InformationBrokerAgent(Agent):
 
         add_request = self.AddRequestBehav()
         add_request_template = Template()
-        add_request_template.set_metadata("performative", "request")
+        add_request_template.set_metadata("performative", "propagate")
         add_request_template.set_metadata("protocol", "addition")
         self.add_behaviour(add_request, add_request_template)
 
         accepted_request = self.AcceptedBehav()
         accepted_request_template = Template()
-        accepted_request_template.set_metadata("performative", "request")
+        accepted_request_template.set_metadata("performative", "proxy")
         accepted_request_template.set_metadata("protocol", "acceptance")
         self.add_behaviour(accepted_request, accepted_request_template)
 
         cancelled_request = self.CancelledBehav()
         cancelled_request_template = Template()
-        cancelled_request_template.set_metadata("performative", "request")
+        cancelled_request_template.set_metadata("performative", "propagate")
         cancelled_request_template.set_metadata("protocol", "cancellation")
         self.add_behaviour(cancelled_request, cancelled_request_template)
 
@@ -58,7 +56,7 @@ class InformationBrokerAgent(Agent):
 
         register_request = self.RegisterBehav()
         register_request_template = Template()
-        register_request_template.set_metadata("performative", "request")
+        register_request_template.set_metadata("performative", "subscribe")
         register_request_template.set_metadata("protocol", "register")
         self.add_behaviour(register_request, register_request_template)
 
@@ -70,40 +68,29 @@ class InformationBrokerAgent(Agent):
 
     class UserRequestsBehav(CyclicBehaviour):
         async def run(self):
-            print("UserRequestsBehav running")
             msg = await self.receive(timeout=1000)  # wait for a message for 10 seconds
             if msg:
                 resp = requestManagement.ListResponse(to=str(msg.sender), data=self.agent.get("requests"))
                 await self.send(resp)
-                print("Message received with content: {}".format(msg.body))
-            else:
-                print("Did not receive any message after 10 seconds")
-
-            # stop agent from behaviour
-            # await self.agent.stop()
 
     class AddRequestBehav(CyclicBehaviour):
         async def run(self):
-            print("AddRequestBehav running")
             msg = await self.receive(timeout=1000)  # wait for a message for 10 seconds
             if msg:
-                if msg.metadata['performative'] == 'request':
-                    body = json.loads(msg.body)
-                    request = {"id": secrets.token_hex(nbytes=32),
-                               "username": str(msg.sender),
-                               "category": body["category"],
-                               "comment": body["comment"]}
-                    self.agent.set("requests", self.agent.get("requests").append(request))
-                    for user in self.agent.get("users"):
-                        resp = requestManagement.BroadcastNew(to=user, data=request)
-                        await self.send(resp)
-                print("Message received with content: {}".format(msg.body))
-            else:
-                print("Did not receive any message after 10 seconds")
+                body = json.loads(msg.body)
+                request = {"id": secrets.token_hex(nbytes=32),
+                           "username": str(msg.sender),
+                           "category": body["category"],
+                           "comment": body["comment"]}
+                requests = self.agent.get("requests")
+                requests.append(request)
+                self.agent.set("requests", requests)
+                for user in self.agent.get("users"):
+                    resp = requestManagement.BroadcastNew(to=user, data=request)
+                    await self.send(resp)
 
     class AcceptedBehav(CyclicBehaviour):
         async def run(self):
-            print("AcceptedBehav running")
             msg = await self.receive(timeout=1000)  # wait for a message for 10 seconds
             if msg:
                 data = json.loads(msg.body)
@@ -113,13 +100,23 @@ class InformationBrokerAgent(Agent):
                         request_valid = True
                         request_to_forward = request
                         self.agent.set("requests", [x for x in self.agent.get("requests") if x["id"] != data["id"]])
-                        print(self.agent.get("requests"))
                         break
                 if request_valid:
                     new_data = {"accepted_request": request_to_forward,
                                 "contact": data["contact"]}
                     # send acceptance message to user who issued the request
                     forward_msg = requestManagement.AcceptanceForward(to=request_to_forward["username"], data=new_data)
+
+                    # generate review tokens
+                    token_to_issue = {'request_id': request_to_forward['id'],
+                                        'from_': str(msg.sender),
+                                        'to': request_to_forward['username']}
+                    msg = reviewManagement.ReviewTokenCreation(
+                            to=self.agent.get(self.agent.review_collector_key),
+                            request_id=token_to_issue.get('request_id'),
+                            from_to=(token_to_issue.get('from_'), token_to_issue.get('to'),)
+                        )
+                    await self.send(msg)
 
                     # cancel request for other users apart from issuer and acceptor
                     for user in self.agent.get("users"):
@@ -128,13 +125,8 @@ class InformationBrokerAgent(Agent):
                             await self.send(cancel_msg)
                     await self.send(forward_msg)
 
-                print("Message received with content: {}".format(msg.body))
-            else:
-                print("Did not receive any message after 10 seconds")
-
     class CancelledBehav(CyclicBehaviour):
         async def run(self):
-            print("CancelledBehav running")
             msg = await self.receive(timeout=1000)  # wait for a message for 10 seconds
             if msg:
                 data = json.loads(msg.body)
@@ -151,58 +143,28 @@ class InformationBrokerAgent(Agent):
                             forward_msg = requestManagement.CancellationForward(to=user, data=data)
                             await self.send(forward_msg)
 
-                print("Cancel Message received with content: {} {}".format(msg.body, str(msg.sender)))
-            else:
-                print("Did not receive any message after 10 seconds")
-
     class CategoriesBehav(CyclicBehaviour):
         async def run(self):
-            print("CategoriesBehav running")
             msg = await self.receive(timeout=1000)
             if msg:
                 resp = requestManagement.CategoriesResponse(to=str(msg.sender), data=self.agent.get('categories'))
                 await self.send(resp)
-                print("Message received with content: {}".format(msg.body))
-            else:
-                pass
 
     class RegisterBehav(CyclicBehaviour):
         async def run(self):
-            print("RegisterBehav running")
             msg = await self.receive(timeout=1000)  # wait for a message for 10 seconds
             if msg:
                 users = self.agent.get('users')
                 users.append(str(msg.sender))
                 self.agent.set('users', users)
-                print(self.agent.get('users'))
-                print("Register Message received with content: {} {}".format(msg.body, str(msg.sender)))
 
     class DeregisterBehav(CyclicBehaviour):
         async def run(self):
-            print("DeregisterBehav running")
             msg = await self.receive(timeout=1000)  # wait for a message for 10 seconds
             if msg:
                 try:
                     users = self.agent.get('users')
                     users.remove(str(msg.sender))
                     self.agent.set('users', users)
-                    print(self.agent.get('users'))
                 except:
-                    print('User {} not in active users'.format(msg.sender))
-                print("Deregister Message received with content: {} {}".format(msg.body, str(msg.sender)))
-
-    class ReviewTokenCreationReqBehav(OneShotBehaviour):
-        async def run(self) -> None:
-            print(f'{repr(self)} running')
-            tokens_to_issue = self.agent.get('tokens_to_issue')
-            if len(tokens_to_issue) and (token_data := tokens_to_issue.pop(0)):
-                msg = reviewManagement.ReviewTokenCreation(
-                    to=self.agent.get(self.agent.review_collector_key),
-                    request_id=token_data.get('request_id'),
-                    user_ids=[token_data.get('from_'), token_data.get('to')]
-                )
-                await self.send(msg)
-                print('Message sent!')
-                self.set('tokens_to_issue', tokens_to_issue)
-            else:
-                print('No tokens to issue')
+                    logging.info('User {} not in active users'.format(msg.sender))

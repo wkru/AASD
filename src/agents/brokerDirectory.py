@@ -1,6 +1,5 @@
-from utils import Location
-
 import json
+import logging
 
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
@@ -9,11 +8,10 @@ from spade.template import Template
 from config import SERVICES
 
 from messages import serviceDiscovery
+from src.misc.location import Location
 
 class BrokerDirectoryAgent(Agent):
     async def setup(self):
-        print(f'{repr(self)} started')
-
         service_request = self.ServiceRequest()
         template = Template()
         template.set_metadata("performative", "request")
@@ -25,7 +23,6 @@ class BrokerDirectoryAgent(Agent):
 
     class ServiceRequest(CyclicBehaviour):
         async def run(self):
-            print("ServiceRequest running")
             msg = await self.receive(timeout=1000)  # wait for a message for 10 seconds
             if msg:
                 try:
@@ -39,7 +36,4 @@ class BrokerDirectoryAgent(Agent):
                     resp = serviceDiscovery.ServicesRespond(to=str(msg.sender), data=SERVICES[index_min][1])
                     await self.send(resp)
                 except:
-                    print('Malformed ServicesRequest message received')
-                print("Message received with content: {}".format(msg.body))
-            else:
-                print("Did not receive any message after 10 seconds")
+                    logging.info('Malformed ServicesRequest message received')

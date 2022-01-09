@@ -1,5 +1,4 @@
 import time
-import logging
 from typing import Type
 
 from spade.agent import Agent
@@ -9,13 +8,9 @@ from agents.user import UserAgent
 from agents.brokerDirectory import BrokerDirectoryAgent
 from agents.reviewCollector import ReviewCollectorAgent
 
-from factories.abstractFactory import AbstractFactory
-from factories.reviewCollector import ReviewCollectorFactory
-
 from agents.productVault import ProductVaultAgent
-from messages import productVaultServices, requestManagement
 
-from utils import Location
+import ui
 
 agents: list[Agent] = []
 
@@ -27,9 +22,13 @@ def create_agent(agent_cls: Type[Agent], jid: str) -> Agent:
 
 
 def main():
-    bd_agent = create_agent(BrokerDirectoryAgent, "broker-directory@localhost")
-    rragent = create_agent(InformationBrokerAgent, "information-broker-1@localhost")
-    pvagent = create_agent(ProductVaultAgent, "product-vault-1@localhost")
+    bd_agent = create_agent(BrokerDirectoryAgent, "broker-directory")
+    rragent = create_agent(InformationBrokerAgent, "information-broker-1")
+    pvagent = create_agent(ProductVaultAgent, "product-vault-1")
+    rcagent = create_agent(ReviewCollectorAgent, 'review-collector-1')
+    rragent2 = create_agent(InformationBrokerAgent, "information-broker-2")
+    pvagent2 = create_agent(ProductVaultAgent, "product-vault-2")
+    rcagent2 = create_agent(ReviewCollectorAgent, 'review-collector-2')
     useragent1 = create_agent(UserAgent, "user1")
     useragent2 = create_agent(UserAgent, "user2")
 
@@ -37,6 +36,7 @@ def main():
         future = a.start()
         future.result()
 
+    rragent.set(InformationBrokerAgent.review_collector_key, 'review-collector-1@localhost')
     # useragent1.set('location', Location(1, 1))
     # useragent1.add_behaviour(UserAgent.ServicesReqBehav())
 
@@ -67,8 +67,8 @@ def main():
     # useragent2.add_behaviour(useragent1.CancelBehav())
 
     # get categories from information broker
-    useragent1.set('information_broker_jid', 'information-broker-1@localhost')
-    useragent1.add_behaviour(useragent1.CategoriesReqBehav())
+    # useragent1.set('information_broker_jid', 'information-broker-1@localhost')
+    # useragent1.add_behaviour(useragent1.CategoriesReqBehav())
 
     # #
     # useragent1 = UserAgent("user1@localhost", "aasd")
@@ -88,6 +88,8 @@ def main():
     #
     # useragent1.add_behaviour(useragent1.VaultOffersReqBehav())
 
+    ui.run()
+
     while rragent.is_alive() or pvagent.is_alive():
         try:
             time.sleep(1)
@@ -95,7 +97,7 @@ def main():
             for a in agents:
                 a.stop()
             break
-    print("Agents finished")
+    logging.info("Agents finished")
 
 
 if __name__ == "__main__":
