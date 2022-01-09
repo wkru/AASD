@@ -167,4 +167,4 @@ class InformationBrokerAgent(Agent):
                     users.remove(str(msg.sender))
                     self.agent.set('users', users)
                 except:
-                    logging.info('User {} not in active users'.format(msg.sender))
+                    logging.error('User {} not in active users'.format(msg.sender))

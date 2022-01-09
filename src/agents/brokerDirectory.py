@@ -36,4 +36,4 @@ class BrokerDirectoryAgent(Agent):
                     resp = serviceDiscovery.ServicesRespond(to=str(msg.sender), data=SERVICES[index_min][1])
                     await self.send(resp)
                 except:
-                    logging.info('Malformed ServicesRequest message received')
+                    logging.error('Malformed ServicesRequest message received')

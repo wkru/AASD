@@ -236,7 +236,7 @@ class UserAgent(Agent):
                     self.agent.set('review_collector_jid', msg_contents['review-collector'])
                     self.agent.set('product_vault_jid', msg_contents['product-vault'])
                 except:
-                    logging.info('Malformed ServicesRespond message received')
+                    logging.error('Malformed ServicesRespond message received')
             else:
                 pass
 

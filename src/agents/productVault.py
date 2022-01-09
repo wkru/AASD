@@ -62,12 +62,10 @@ class ProductVaultAgent(Agent):
                 try:
                     msg_contents = json.loads(msg.body)
                     assert {'category', 'comment', 'location'} == set(msg_contents.keys())
-                    assert msg_contents['category'] >= 0
-                    assert msg_contents['category'] < len(self.agent.get('categories'))
                     self.agent.get('offers')[self.agent.get('next_offer_id')] = msg_contents
                     self.agent.set('next_offer_id', self.agent.get('next_offer_id') + 1)
                 except:
-                    logging.info('Malformed AddToProductVault message received')
+                    logging.error('Malformed AddToProductVault message received')
 
 
     class GetBehav(CyclicBehaviour):
@@ -87,4 +85,4 @@ class ProductVaultAgent(Agent):
 
                     await self.send(resp)
                 except:
-                    logging.info('Malformed GetFromProductVault message received')
+                    logging.error('Malformed GetFromProductVault message received')

@@ -1,4 +1,5 @@
 import time
+import logging
 from typing import Type
 
 from spade.agent import Agent
@@ -32,11 +33,13 @@ def main():
     useragent1 = create_agent(UserAgent, "user1")
     useragent2 = create_agent(UserAgent, "user2")
 
+
     for a in agents:
         future = a.start()
         future.result()
 
     rragent.set(InformationBrokerAgent.review_collector_key, 'review-collector-1@localhost')
+    rragent2.set(InformationBrokerAgent.review_collector_key, 'review-collector-2@localhost')
     # useragent1.set('location', Location(1, 1))
     # useragent1.add_behaviour(UserAgent.ServicesReqBehav())
 
@@ -90,16 +93,9 @@ def main():
 
     ui.run()
 
-    while rragent.is_alive() or pvagent.is_alive():
-        try:
-            time.sleep(1)
-        except KeyboardInterrupt:
-            for a in agents:
-                a.stop()
-            break
     logging.info("Agents finished")
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.ERROR)
     main()

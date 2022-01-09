@@ -6,6 +6,8 @@ from agents.user import UserAgent
 from misc.review import Token
 from src.misc.location import Location
 
+from spade import quit_spade
+
 users = []
 active_user: Optional[UserAgent] = None
 next_user_id = 0
@@ -103,7 +105,7 @@ def choose_category(vault=False):
         for category in category_list:
             options.append([category])
         (i, _) = print_menu(options, 'Wybierz kategorię z listy:')
-        return options[i]
+        return options[i][0]
     except:
         print('Błąd pobierania kategorii!')
         return None
@@ -246,7 +248,7 @@ def print_leaderboard():
     except:
         print('Błąd pobierania aktywnych zgłoszeń!')
         return
-    print('Top pomagaczy')
+    print('Top pomagacze')
     for i, user in enumerate(leaderboard):
         print(i+1, user)
 
@@ -254,6 +256,9 @@ def print_leaderboard():
 def manage_services():
     pass
 
+def quit_ui():
+    quit_spade()
+    exit(0)
 
 def run():
     global active_user
@@ -268,7 +273,7 @@ def run():
                     ('Sprawdź recenzje użytkownika', print_reviews, None),
                     ('Wyświetl listę Top Pomagaczy', print_leaderboard, None),
                     ('Zarządzanie systemem agentów', manage_services, None),
-                    ('Zakończ program', exit, 0)]
+                    ('Zakończ program', quit_ui, None)]
 
     while True:
         if active_user is None:
