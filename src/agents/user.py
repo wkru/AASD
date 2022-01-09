@@ -8,7 +8,6 @@ from spade.template import Template
 
 from src.messages import requestManagement, productVaultServices, serviceDiscovery, userRegistration, reviewManagement
 from src.misc.review import Token
-
 from src.config import BROKER_DIRECTORY_JID
 
 
