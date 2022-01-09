@@ -1,13 +1,17 @@
+from typing import Optional
+
 from agents.informationBroker import InformationBrokerAgent
 from agents.user import UserAgent
 from agents.brokerDirectory import BrokerDirectoryAgent
 
 from agents.productVault import ProductVaultAgent
 
+from misc.review import Token
+
 from utils import Location
 
 users = []
-active_user: UserAgent
+active_user: Optional[UserAgent] = None
 next_user_id = 0
 new_user_added = False
 
@@ -31,6 +35,9 @@ def print_menu(options, prompt='Wybierz dostępną opcję:'):
         print(i, option[0])
     chosen = custom_input()
 
+    if chosen >= len(options):
+        print('Wpisany numer jest niepoprawny.')
+        return print_menu(options, prompt)
     return i, options[chosen]
 
 
@@ -49,7 +56,7 @@ def change_user():
         new_user_added = False
         options = [('Dodaj nowego użytkownika', add_new_user, None)]
         for i, user in enumerate(users):
-            options.append((user[0], set_active_user, i))
+            options.append((user[0], _set_active_user, i))
         execute_from_menu(options)
         if not new_user_added:
             break
@@ -69,7 +76,7 @@ def add_new_user():
     useragent1.add_behaviour(UserAgent.ServicesReqBehav())
 
 
-def set_active_user(num):
+def _set_active_user(num):
     global active_user
     active_user = users[num][1]
 
@@ -118,10 +125,10 @@ def retrieve_requests(own=False):
     for request in requests:
         if request['username'] == str(active_user.jid):
             if own:
-                options.append((str(request), cancel_request, request['id']))
+                options.append((str(request), _cancel_request, request['id']))
         else:
             if not own:
-                options.append((str(request), accept_request, request['id']))
+                options.append((str(request), _accept_request, request['id']))
 
     if not options:
         print('\nBrak aktywnych zgłoszeń.')
@@ -130,12 +137,12 @@ def retrieve_requests(own=False):
     execute_from_menu(options, 'Wybierz zgłoszenie do anulowania:' if own else 'Wybierz zgłoszenie do zaakceptowania:')
 
 
-def cancel_request(id):
+def _cancel_request(id):
     active_user.set("request_to_cancel", id)
     active_user.add_behaviour(UserAgent.CancelBehav())
 
 
-def accept_request(id):
+def _accept_request(id):
     active_user.set("request_to_accept", id)
     active_user.add_behaviour(UserAgent.AcceptBehav())
 
@@ -160,7 +167,7 @@ def retrieve_vault_products():
 
     options = []
     for product in products:
-        options.append((str(products[product]), get_product_from_vault, product))
+        options.append((str(products[product]), _get_product_from_vault, product))
 
     if not options:
         print('\nBrak produktów w banku.')
@@ -169,22 +176,74 @@ def retrieve_vault_products():
     execute_from_menu(options, 'Wybierz produkt do pobrania:')
 
 
-def get_product_from_vault(id):
+def _get_product_from_vault(id):
     active_user.set("vault_get_product_data", id)
     active_user.add_behaviour(UserAgent.VaultGetReqBehav())
 
 
 def add_review():
-    global active_user
-    pass
+    tokens = active_user.get('review_tokens')
+    if not tokens:
+        print('Brak tokenów. Nie można dodać recenzji.')
+        return
+
+    options = []
+    for t in tokens.values():
+        options.append((str(t), _send_review, t))
+
+    execute_from_menu(options, 'Wybierz token do recenzji:')
+
+
+def _send_review(token: Token):
+    contents = input('Dodaj treść recenzji: ')
+    rating = input('Dodaj ocenę recenzji: ')
+
+    try:
+        rating = int(rating)
+    except ValueError:
+        print('Nieprawidłowa ocena!')
+        return
+
+    print(token)
+    review = {
+        'contents': contents, 'rating': rating, 'request_id': token.request_id, 'from_': token.from_, 'to': token.to
+    }
+
+    active_user.set('kwargs', review)
+    active_user.set('target_jid', token.to)
+    active_user.add_behaviour(UserAgent.ReviewCreationReqBehav())
 
 
 def print_reviews():
-    pass
+    options = []
+    for username, user in users:
+        options.append((str(user.jid), _print_reviews, str(user.jid)))
+
+    execute_from_menu(options, 'Wybierz użytkownika do pobrania recenzji:')
+
+
+def _print_reviews(jid: str):
+    active_user.set('target_jid', jid)
+    active_user.add_behaviour(UserAgent.ReviewsReqBehav())
+    try:
+        reviews = active_user.get('queue').get(timeout=5)
+    except:
+        print('Błąd pobierania aktywnych zgłoszeń!')
+        return
+    print(f'Lista recenzji użytkownika {jid}:')
+    print(reviews)
 
 
 def print_leaderboard():
-    pass
+    active_user.add_behaviour(UserAgent.LeaderboardReqBehav())
+    try:
+        leaderboard = active_user.get('queue').get(timeout=5)
+    except:
+        print('Błąd pobierania aktywnych zgłoszeń!')
+        return
+    print('Top pomagaczy')
+    for i, user in enumerate(leaderboard):
+        print(i+1, user)
 
 
 def manage_services():
@@ -192,6 +251,7 @@ def manage_services():
 
 
 def run():
+    global active_user
     main_options = [('Zmień/dodaj użytkownika', change_user, None),
                     ('Sprawdź powiadomienia', print_notifications, None),
                     ('Dodaj zgłoszenie', add_request, None),

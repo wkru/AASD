@@ -1,5 +1,5 @@
 import json
-import queue
+from queue import Queue
 
 from spade.agent import Agent
 from spade.behaviour import OneShotBehaviour, CyclicBehaviour
@@ -11,13 +11,12 @@ from src.misc.review import Token
 from src.config import BROKER_DIRECTORY_JID
 
 
-from queue import Queue
 
 class UserAgent(Agent):
     review_collector_key = 'review_collector'
 
     async def setup(self):
-        self.set(self.review_collector_key, 'review-collector-0@localhost')
+        self.set(self.review_collector_key, 'review-collector-1@localhost')
         self.set('review_tokens', {})
 
         # self.set("new_request", {'category': 'salt', 'comment': 'Himalaya salt'})
@@ -264,6 +263,9 @@ class UserAgent(Agent):
             if (msg := await self.receive(timeout=1000)) is not None:
                 print(f'Message received: {msg.body}')
                 self.agent.set('last_received_msg', msg)
+                leaderboard = json.loads(msg.body)
+                queue = self.agent.get('queue')
+                queue.put_nowait(leaderboard)
 
     class ReviewsReqBehav(OneShotBehaviour):
         async def run(self) -> None:
@@ -280,13 +282,17 @@ class UserAgent(Agent):
             if (msg := await self.receive(timeout=1000)) is not None:
                 print(f'Message received: {msg.body}')
                 self.agent.set('last_received_msg', msg)
+                reviews = json.loads(msg.body)
+                queue = self.agent.get('queue')
+                queue.put_nowait(reviews)
 
     class ReviewCreationReqBehav(OneShotBehaviour):
         async def run(self) -> None:
             print(f'{repr(self)} running')
             kwargs = self.agent.get('kwargs')
-            self.agent.set('kwargs', None)
 
+            print(self.agent.get('review_tokens'))
+            print(self.agent.get('kwargs'))
             if (token := self.agent.get('review_tokens').get(kwargs.get('request_id'))) is not None:
                 msg = reviewManagement.ReviewCreation(
                     to=self.agent.get(self.agent.review_collector_key),
@@ -297,6 +303,7 @@ class UserAgent(Agent):
                 print('Message sent!')
                 tokens = self.agent.get('review_tokens')
                 del tokens[kwargs.get('request_id')]
+                self.agent.set('kwargs', None)
                 self.agent.set('review_tokens', tokens)
                 print(f'Token deleted: {token}')
 
