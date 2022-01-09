@@ -168,4 +168,3 @@ class InformationBrokerAgent(Agent):
                     self.agent.set('users', users)
                 except:
                     print('User {} not in active users'.format(msg.sender))
-

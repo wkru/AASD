@@ -1,7 +1,8 @@
 import json
+import collections
 
 from spade.agent import Agent
-from spade.behaviour import CyclicBehaviour, OneShotBehaviour, PeriodicBehaviour
+from spade.behaviour import CyclicBehaviour
 from spade.template import Template
 
 from src.messages import reviewManagement
@@ -20,14 +21,27 @@ class ReviewCollectorAgent(Agent):
     def __repr__(self):
         return str(self.__class__.__name__)
 
-    def update_leaderboard(self) -> None:
-        # todo
-        pass
+    def update_leaderboard(self):
+        def count_ratings(_reviews: list) -> dict:
+            counts = {}
+            for review in _reviews:
+                rating = review.rating
+                counts[rating] = counts.get(rating, 0) + 1
+            return counts
 
-    def clear_unused_tokens(self) -> None:
-        # drop tokens older than 2 weeks
-        # todo
-        pass
+        def calculate_weighted_average_rating(rating_counts: dict) -> float:
+            sum_ratings = 0
+            for rating, count in rating_counts.items():
+                sum_ratings += rating * count
+            sum_counts = sum(rating_counts.values())
+            return sum_ratings / sum_counts
+
+        reviews = self.get('reviews')
+        user_ratings = {}
+        for user, review_list in reviews.items():
+            user_ratings[user] = calculate_weighted_average_rating(count_ratings(review_list))
+        ordered = collections.OrderedDict(sorted(user_ratings.items(), key=lambda t: t[1], reverse=True))
+        self.set('leaderboard', list(ordered.keys())[:25])
 
     async def setup(self):
         print(f'{repr(self)} started')
@@ -57,11 +71,6 @@ class ReviewCollectorAgent(Agent):
             Template(metadata=reviewManagement.ReviewTokenCreation.metadata)
         )
 
-    # class SendTokenExpiredInfoBehav(OneShotBehaviour):
-    #     async def run(self) -> None:
-    #         # todo
-    #         pass
-
     class LeaderboardBehav(CyclicBehaviour):
         async def run(self) -> None:
             print(f'{repr(self)} started')
@@ -83,6 +92,9 @@ class ReviewCollectorAgent(Agent):
                 await self.send(resp)
 
     def create_review(self, contents: str, rating: int, request_id: int, from_: str, to: str) -> None:
+        if rating not in [1, 2, 3, 4, 5]:
+            print(f'Invalid rating: {rating}')
+            return
         new_review = Review(contents, rating, request_id, from_, to)
         reviews = self.get('reviews')
         reviews[to] = reviews.get(to, []) + [new_review]
@@ -104,6 +116,10 @@ class ReviewCollectorAgent(Agent):
                 if self.are_valid_kwargs(kwargs, token):
                     self.agent.create_review(**kwargs)
                     print(f'Review created: {kwargs}')
+
+                    self.agent.update_leaderboard()
+                    print('Leaderboard updated')
+
                     tokens = self.agent.get('tokens')
                     del tokens[token.request_id]
                     self.agent.set('tokens', tokens)
