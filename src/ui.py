@@ -6,12 +6,11 @@ from agents.productVault import ProductVaultAgent
 
 from utils import Location
 
-from queue import Queue
-
 users = []
-active_user = None
+active_user: UserAgent
 next_user_id = 0
 new_user_added = False
+
 
 def custom_input(prompt='Wpisz numer', cls=int):
     while True:
@@ -24,13 +23,16 @@ def custom_input(prompt='Wpisz numer', cls=int):
 
     return res
 
+
 def print_menu(options, prompt='Wybierz dostępną opcję:'):
     print('\n' + prompt)
+    i = 0
     for i, option in enumerate(options):
         print(i, option[0])
     chosen = custom_input()
 
-    return (i, options[chosen])
+    return i, options[chosen]
+
 
 def execute_from_menu(options, prompt='Wybierz dostępną opcję:'):
     (_, chosen) = print_menu(options, prompt)
@@ -39,6 +41,7 @@ def execute_from_menu(options, prompt='Wybierz dostępną opcję:'):
         chosen[1]()
     else:
         chosen[1](chosen[2])
+
 
 def change_user():
     global new_user_added
@@ -51,12 +54,13 @@ def change_user():
         if not new_user_added:
             break
 
+
 def add_new_user():
-    global next_user_id, users, new_user_added
+    global next_user_id, new_user_added
     new_user_added = True
     username = input('Podaj nazwę użytkownika: ')
-    x = custom_input('Podaj współrzędną x użytkownika', float)
-    y = custom_input('Podaj współrzędną y użytkownika', float)
+    x = custom_input('Podaj współrzędną x użytkownika')
+    y = custom_input('Podaj współrzędną y użytkownika')
     useragent1 = UserAgent('user' + str(next_user_id) + '@localhost', "aasd")
     next_user_id += 1
     useragent1.start()
@@ -64,17 +68,18 @@ def add_new_user():
     useragent1.set('location', Location(x, y))
     useragent1.add_behaviour(UserAgent.ServicesReqBehav())
 
+
 def set_active_user(num):
-    global users, active_user
+    global active_user
     active_user = users[num][1]
 
+
 def print_notifications():
-    global active_user
     notifications = active_user.get('notifications')
     print(notifications)
 
+
 def choose_category(vault=False):
-    global active_user
     parameter = 'vault_categories' if vault else 'categories'
     if vault:
         active_user.add_behaviour(UserAgent.VaultCategoriesReqBehav())
@@ -91,8 +96,8 @@ def choose_category(vault=False):
         print('Błąd pobierania kategorii!')
         return None
 
+
 def add_request():
-    global active_user
     category = choose_category()
     if category is None:
         return
@@ -100,8 +105,8 @@ def add_request():
     active_user.set('new_request', {'category': category, 'comment': comment})
     active_user.add_behaviour(UserAgent.AddRequestBehav())
 
+
 def retrieve_requests(own=False):
-    global active_user
     active_user.add_behaviour(UserAgent.AskForRequestsBehav())
     try:
         requests = active_user.get('queue').get(timeout=5)
@@ -124,18 +129,18 @@ def retrieve_requests(own=False):
 
     execute_from_menu(options, 'Wybierz zgłoszenie do anulowania:' if own else 'Wybierz zgłoszenie do zaakceptowania:')
 
+
 def cancel_request(id):
-    global active_user
     active_user.set("request_to_cancel", id)
     active_user.add_behaviour(UserAgent.CancelBehav())
 
+
 def accept_request(id):
-    global active_user
     active_user.set("request_to_accept", id)
     active_user.add_behaviour(UserAgent.AcceptBehav())
 
+
 def add_product_to_vault():
-    global active_user
     category = choose_category(vault=True)
     if category is None:
         return
@@ -144,8 +149,8 @@ def add_product_to_vault():
     active_user.set('vault_add_product_data', {'category': category, 'comment': comment, 'location': location})
     active_user.add_behaviour(UserAgent.VaultAddBehav())
 
+
 def retrieve_vault_products():
-    global active_user
     active_user.add_behaviour(UserAgent.VaultOffersReqBehav())
     try:
         products = active_user.get('queue').get(timeout=5)
@@ -163,23 +168,28 @@ def retrieve_vault_products():
 
     execute_from_menu(options, 'Wybierz produkt do pobrania:')
 
+
 def get_product_from_vault(id):
-    global active_user
     active_user.set("vault_get_product_data", id)
     active_user.add_behaviour(UserAgent.VaultGetReqBehav())
+
 
 def add_review():
     global active_user
     pass
 
+
 def print_reviews():
     pass
+
 
 def print_leaderboard():
     pass
 
+
 def manage_services():
     pass
+
 
 def run():
     main_options = [('Zmień/dodaj użytkownika', change_user, None),
@@ -200,10 +210,3 @@ def run():
             change_user()
         else:
             execute_from_menu(main_options)
-
-
-
-
-
-
-
