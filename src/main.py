@@ -9,6 +9,8 @@ from messages import productVaultServices, requestManagement
 
 from utils import Location
 
+import ui
+
 def create_agent(agent_cls, jid):
     return agent_cls(jid, "aasd")
 
@@ -57,8 +59,8 @@ if __name__ == "__main__":
     # useragent2.add_behaviour(useragent1.CancelBehav())
 
     # get categories from information broker
-    useragent1.set('information_broker_jid', 'information-broker-1@localhost')
-    useragent1.add_behaviour(useragent1.CategoriesReqBehav())
+    # useragent1.set('information_broker_jid', 'information-broker-1@localhost')
+    # useragent1.add_behaviour(useragent1.CategoriesReqBehav())
 
     # #
     # useragent1 = UserAgent("user1@localhost", "aasd")
@@ -77,6 +79,8 @@ if __name__ == "__main__":
     # useragent1.add_behaviour(useragent1.VaultGetReqBehav())
     #
     # useragent1.add_behaviour(useragent1.VaultOffersReqBehav())
+
+    ui.run()
 
     while rragent.is_alive() or pvagent.is_alive():
         try:

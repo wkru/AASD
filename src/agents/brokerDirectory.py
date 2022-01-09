@@ -12,8 +12,6 @@ from messages import serviceDiscovery
 
 class BrokerDirectoryAgent(Agent):
     async def setup(self):
-        print(f'{repr(self)} started')
-
         service_request = self.ServiceRequest()
         template = Template()
         template.set_metadata("performative", "request")
@@ -25,7 +23,6 @@ class BrokerDirectoryAgent(Agent):
 
     class ServiceRequest(CyclicBehaviour):
         async def run(self):
-            print("ServiceRequest running")
             msg = await self.receive(timeout=1000)  # wait for a message for 10 seconds
             if msg:
                 try:
@@ -40,6 +37,3 @@ class BrokerDirectoryAgent(Agent):
                     await self.send(resp)
                 except:
                     print('Malformed ServicesRequest message received')
-                print("Message received with content: {}".format(msg.body))
-            else:
-                print("Did not receive any message after 10 seconds")

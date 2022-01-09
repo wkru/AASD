@@ -1,4 +1,5 @@
 import json
+import queue
 
 from spade.agent import Agent
 from spade.behaviour import OneShotBehaviour, CyclicBehaviour
@@ -8,56 +9,41 @@ from messages import requestManagement, productVaultServices, serviceDiscovery, 
 
 from config import BROKER_DIRECTORY_JID
 
+from queue import Queue
+
 class UserAgent(Agent):
     class RecvRequestListBehav(CyclicBehaviour):
         async def run(self):
-            print(f"RecvRequestListBehav jid: {str(self.agent.jid)} running")
 
             if (msg := await self.receive(timeout=1000)) is not None:
                 msg_json = json.loads(msg.body)
-                self.agent.set('requests', msg_json)
-                for product in msg_json:
-                    print('ID:', product['id'])
-                    print('Category:', product['category'])
-                    print('Comment:', product['comment'])
-                print(f"jid: {str(self.agent.jid)} Message received with content: {msg.body}")
+                queue = self.agent.get('queue')
+                queue.put_nowait(msg_json)
 
     class AskForRequestsBehav(OneShotBehaviour):
         async def run(self):
-            print(f"AskForRequestsBehav jid:{str(self.agent.jid)} running")
             msg = requestManagement.ListRetrieve(to=self.agent.get('information_broker_jid'))
 
             await self.send(msg)
 
     class AddRequestBehav(OneShotBehaviour):
         async def run(self):
-            print(f"AddRequestBehav jid:{str(self.agent.jid)} running")
-
             if self.agent.get("new_request") is not None:
                 msg = requestManagement.Addition(to=self.agent.get('information_broker_jid'), data=self.agent.get("new_request"))
-                # print(self.agent.get("new_request"))
                 self.agent.set("new_request", None)
-                # print(self.agent.get("new_request"))
                 await self.send(msg)
 
     class IncomingRequestBehav(CyclicBehaviour):
         async def run(self):
-            print(f"IncomingRequestBehav jid:{str(self.agent.jid)} running")
 
             if (msg := await self.receive(timeout=1000)) is not None:
                 msg_json = json.loads(msg.body)
                 if msg_json['username'] != str(self.agent.jid):
-                    print('ID:', msg_json['id'])
-                    print('Category:', msg_json['category'])
-                    print('Comment:', msg_json['comment'])
                     del msg_json["username"]
                     self.agent.set("notifications", self.agent.get("notifications") + [msg_json])
-                    print(f'cache {self.agent.jid}: {self.agent.get("notifications")}')
-                print(f"jid: {str(self.agent.jid)} Message received with content: {msg.body}")
 
     class AcceptBehav(OneShotBehaviour):
         async def run(self):
-            print(f"AcceptBehav jid:{str(self.agent.jid)} running")
             data = {"id": self.agent.get("request_to_accept"),
                     "contact": self.agent.get("contact_data")}
             msg = requestManagement.Acceptance(to=self.agent.get('information_broker_jid'), data=data)
@@ -66,7 +52,6 @@ class UserAgent(Agent):
 
     class CancelBehav(OneShotBehaviour):
         async def run(self):
-            print(f"CancelBehav jid:{str(self.agent.jid)} running {self.agent.get('request_to_cancel')}")
             data = {"id": self.agent.get("request_to_cancel")}
             msg = requestManagement.Cancellation(to=self.agent.get('information_broker_jid'), data=data)
 
@@ -74,97 +59,75 @@ class UserAgent(Agent):
 
     class RecvAcceptBehav(CyclicBehaviour):
         async def run(self):
-            print(f"RecvAcceptBehav jid:{str(self.agent.jid)} running")
-
             if (msg := await self.receive(timeout=1000)) is not None:
                 msg_json = json.loads(msg.body)
-                print("accepted")
+                print("Twoje zgłoszenie zostało zaakceptowane!")
                 print('ID:', msg_json['accepted_request']['id'])
                 print('Category:', msg_json['accepted_request']['category'])
                 print('Comment:', msg_json['accepted_request']['comment'])
                 print('Username:', msg_json['accepted_request']['username'])
-                print('contact_info:', msg_json['contact'])
-                print(f"jid: {str(self.agent.jid)} Message received with content: {msg.body}")
+                print('Contact info:', msg_json['contact'])
 
     class RecvCancelBehav(CyclicBehaviour):
         async def run(self):
-            print(f"RecvCancelBehav jid:{str(self.agent.jid)} running")
 
             if (msg := await self.receive(timeout=1000)) is not None:
                 msg_json = json.loads(msg.body)
-                # print("cancelled")
-                print('ID:', msg_json['id'])
                 self.agent.set("notifications", [x for x in self.agent.get("notifications") if x['id'] != msg_json['id']])
-                print(self.agent.get("notifications"))
-                print(f"jid: {str(self.agent.jid)} Message received with content: {msg.body}")
 
     class CategoriesReqBehav(OneShotBehaviour):
         async def run(self):
-            print('CategoriesReqBehav running')
-
             msg = requestManagement.CategoriesRetrieve(to=self.agent.get('information_broker_jid'))
             await self.send(msg)
 
     class CategoriesRespBehav(CyclicBehaviour):
         async def run(self):
-            print("CategoriesRespBehav running")
             msg = await self.receive(timeout=1000)
             if msg:
                 msg_body = json.loads(msg.body)
-                self.agent.set('categories', msg_body)
-                print("Message received with content: {}".format(msg.body))
+                queue = self.agent.get('queue')
+                queue.put_nowait(msg_body)
 
     class VaultOffersReqBehav(OneShotBehaviour):
         async def run(self):
-            print('VaultOffersReqBehav running')
-
             msg = productVaultServices.OffersRetrieve(to=self.agent.get('product_vault_jid'))
             await self.send(msg)
 
     class VaultOffersRespBehav(CyclicBehaviour):
         async def run(self):
-            print("VaultOffersRespBehav running")
             msg = await self.receive(timeout=1000)
             if msg:
                 msg_body = json.loads(msg.body)
-                self.agent.set('vault_products', msg_body)
-                print("Message received with content: {}".format(msg.body))
+                queue = self.agent.get('queue')
+                queue.put_nowait(msg_body)
 
     class VaultCategoriesReqBehav(OneShotBehaviour):
         async def run(self):
-            print('VaultCategoriesReqBehav running')
-
             msg = productVaultServices.CategoriesRetrieve(to=self.agent.get('product_vault_jid'))
             await self.send(msg)
 
     class VaultCategoriesRespBehav(CyclicBehaviour):
         async def run(self):
-            print("VaultCategoriesRespBehav running")
             msg = await self.receive(timeout=1000)
             if msg:
                 msg_body = json.loads(msg.body)
-                self.agent.set('vault_categories', msg_body)
-                print("Message received with content: {}".format(msg.body))
+                queue = self.agent.get('queue')
+                queue.put_nowait(msg_body)
 
     class VaultAddBehav(OneShotBehaviour):
         async def run(self):
-            print('VaultAddBehav running')
-
             msg = productVaultServices.AddProductRequest(to=self.agent.get('product_vault_jid'),
                                                          data=self.agent.get('vault_add_product_data'))
             await self.send(msg)
 
     class VaultGetReqBehav(OneShotBehaviour):
         async def run(self):
-            print('VaultGetReqBehav running')
-
             msg = productVaultServices.GetProductRequest(to=self.agent.get('product_vault_jid'),
-                                                         data=self.agent.get('vault_get_product_data'))
+                                                         data={'id': self.agent.get('vault_get_product_data')})
             await self.send(msg)
 
     class VaultGetRespBehav(CyclicBehaviour):
         async def run(self):
-            print("VaultGetRespBehav running")
             msg = await self.receive(timeout=1000)
             if msg:
                 print("Message received with content: {}".format(msg.body))
@@ -173,8 +136,6 @@ class UserAgent(Agent):
 
     class ServicesReqBehav(OneShotBehaviour):
         async def run(self):
-            print("ServicesReqBehav running")
-
             msg = serviceDiscovery.ServicesRetrieve(to=BROKER_DIRECTORY_JID,
                                                     data=(self.agent.get('location').x,
                                                           self.agent.get('location').y))
@@ -182,7 +143,6 @@ class UserAgent(Agent):
 
     class ServicesRespBehav(CyclicBehaviour):
         async def run(self):
-            print("ServicesRespBehav running")
             msg = await self.receive(timeout=1000)
             if msg:
                 try:
@@ -192,21 +152,16 @@ class UserAgent(Agent):
                     self.agent.set('product_vault_jid', msg_contents['product-vault'])
                 except:
                     print('Malformed ServicesRespond message received')
-                print("Message received with content: {}".format(msg.body))
             else:
                 pass
 
     class Register(OneShotBehaviour):
         async def run(self):
-            print("Register running")
-
             msg = userRegistration.RegistrationRequest(to=self.agent.get('information_broker_jid'))
             await self.send(msg)
 
     class Deregister(OneShotBehaviour):
         async def run(self):
-            print("Deregister running")
-
             msg = userRegistration.DeregistrationRequest(to=self.agent.get('information_broker_jid'))
             await self.send(msg)
 
@@ -219,8 +174,7 @@ class UserAgent(Agent):
         self.set('vault_categories', None)
         self.set('requests', None)
         self.set('vault_products', None)
-
-        print("SenderAgent started")
+        self.set('queue', Queue(1))
 
         incoming_request = self.IncomingRequestBehav()
         incoming_request_template = Template()
@@ -275,4 +229,6 @@ class UserAgent(Agent):
         services_resp_template.set_metadata("performative", "inform")
         services_resp_template.set_metadata("protocol", "local_services")
         self.add_behaviour(services_resp_b, services_resp_template)
+
+
 
