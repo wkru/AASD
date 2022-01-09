@@ -5,14 +5,100 @@ from spade.agent import Agent
 from spade.behaviour import OneShotBehaviour, CyclicBehaviour
 from spade.template import Template
 
-from messages import requestManagement, productVaultServices, serviceDiscovery, userRegistration
+from src.messages import requestManagement, productVaultServices, serviceDiscovery, userRegistration, reviewManagement
+from src.misc.review import Token
 
-from config import BROKER_DIRECTORY_JID
+from src.config import BROKER_DIRECTORY_JID
+
 
 from queue import Queue
 
 class UserAgent(Agent):
-    class RecvRequestListBehav(CyclicBehaviour):
+    review_collector_key = 'review_collector'
+
+    async def setup(self):
+        self.set(self.review_collector_key, 'review-collector-0@localhost')
+        self.set('review_tokens', {})
+
+        # self.set("new_request", {'category': 'salt', 'comment': 'Himalaya salt'})
+        self.set("contact_data", {'phone': "000-000-000", "email": "test@test.pl"})
+        self.set("notifications", [{'id': 'f9a4be60598dac4d8c28157c2a342cff4e3caed484fc27bab97be2790d75caa5',
+                                    'category': 'salt', 'comment': 'Himalaya salt'}])
+        self.set('queue', Queue(1))
+
+        incoming_request = self.IncomingRequestBehav()
+        incoming_request_template = Template()
+        incoming_request_template.set_metadata("performative", "inform")
+        incoming_request_template.set_metadata("protocol", "addition")
+        self.add_behaviour(incoming_request, incoming_request_template)
+
+        recv_request_list = self.RecvBehav()
+        recv_request_list_template = Template()
+        recv_request_list_template.set_metadata("performative", "inform")
+        recv_request_list_template.set_metadata("protocol", "user_requests")
+        self.add_behaviour(recv_request_list, recv_request_list_template)
+
+        recv_accept = self.RecvAcceptBehav()
+        recv_accept_template = Template()
+        recv_accept_template.set_metadata("performative", "inform")
+        recv_accept_template.set_metadata("protocol", "acceptance")
+        self.add_behaviour(recv_accept, recv_accept_template)
+
+        recv_cancel = self.RecvCancelBehav()
+        recv_cancel_template = Template()
+        recv_cancel_template.set_metadata("performative", "inform")
+        recv_cancel_template.set_metadata("protocol", "cancellation")
+        self.add_behaviour(recv_cancel, recv_cancel_template)
+
+        categories_resp_b = self.CategoriesRespBehav()
+        categories_resp_template = Template()
+        categories_resp_template.set_metadata("performative", "inform")
+        categories_resp_template.set_metadata("protocol", "categories")
+        self.add_behaviour(categories_resp_b, categories_resp_template)
+
+        vault_offers_resp_b = self.VaultOffersRespBehav()
+        vault_offers_resp_template = Template()
+        vault_offers_resp_template.set_metadata("performative", "inform")
+        vault_offers_resp_template.set_metadata("protocol", "vault_offers")
+        self.add_behaviour(vault_offers_resp_b, vault_offers_resp_template)
+
+        vault_categories_resp_b = self.VaultCategoriesRespBehav()
+        vault_categories_resp_template = Template()
+        vault_categories_resp_template.set_metadata("performative", "inform")
+        vault_categories_resp_template.set_metadata("protocol", "vault_categories")
+        self.add_behaviour(vault_categories_resp_b, vault_categories_resp_template)
+
+        vault_get_resp_b = self.VaultGetRespBehav()
+        vault_get_resp_template = Template()
+        vault_get_resp_template.set_metadata("performative", "inform")
+        vault_get_resp_template.set_metadata("protocol", "vault_get")
+        self.add_behaviour(vault_get_resp_b, vault_get_resp_template)
+
+        services_resp_b = self.ServicesRespBehav()
+        services_resp_template = Template()
+        services_resp_template.set_metadata("performative", "inform")
+        services_resp_template.set_metadata("protocol", "local_services")
+        self.add_behaviour(services_resp_b, services_resp_template)
+
+        leaderboard_resp_b = self.LeaderboardRespBehav()
+        self.add_behaviour(
+            leaderboard_resp_b,
+            Template(metadata=reviewManagement.LeaderboardResponse.metadata),
+        )
+
+        reviews_b = self.ReviewsRespBehav()
+        self.add_behaviour(
+            reviews_b,
+            Template(metadata=reviewManagement.ReviewsResponse.metadata),
+        )
+
+        review_token_resp_b = self.ReviewTokenRespBehav()
+        self.add_behaviour(
+            review_token_resp_b,
+            Template(metadata=reviewManagement.ReviewToken.metadata),
+        )
+
+    class RecvBehav(OneShotBehaviour):
         async def run(self):
 
             if (msg := await self.receive(timeout=1000)) is not None:
@@ -165,70 +251,65 @@ class UserAgent(Agent):
             msg = userRegistration.DeregistrationRequest(to=self.agent.get('information_broker_jid'))
             await self.send(msg)
 
-    async def setup(self):
-        self.set("new_request", {'category': 0, 'comment': 'Himalaya salt'})
-        self.set("contact_data", {'phone': "000-000-000", "email": "test@test.pl"})
-        self.set("notifications", [{'id': 'f9a4be60598dac4d8c28157c2a342cff4e3caed484fc27bab97be2790d75caa5',
-                                    'category': 'salt', 'comment': 'Himalaya salt'}])
-        self.set('categories', None)
-        self.set('vault_categories', None)
-        self.set('requests', None)
-        self.set('vault_products', None)
-        self.set('queue', Queue(1))
+    class LeaderboardReqBehav(OneShotBehaviour):
+        async def run(self):
+            print(f'{repr(self)} running')
+            msg = reviewManagement.Leaderboard(to=self.agent.get(self.agent.review_collector_key))
+            await self.send(msg)
+            print('Message sent!')
 
-        incoming_request = self.IncomingRequestBehav()
-        incoming_request_template = Template()
-        incoming_request_template.set_metadata("performative", "inform")
-        incoming_request_template.set_metadata("protocol", "addition")
-        self.add_behaviour(incoming_request, incoming_request_template)
+    class LeaderboardRespBehav(CyclicBehaviour):
+        async def run(self):
+            print(f'{repr(self)} running')
+            if (msg := await self.receive(timeout=1000)) is not None:
+                print(f'Message received: {msg.body}')
+                self.agent.set('last_received_msg', msg)
 
-        recv_request_list = self.RecvRequestListBehav()
-        recv_request_list_template = Template()
-        recv_request_list_template.set_metadata("performative", "inform")
-        recv_request_list_template.set_metadata("protocol", "user_requests")
-        self.add_behaviour(recv_request_list, recv_request_list_template)
+    class ReviewsReqBehav(OneShotBehaviour):
+        async def run(self) -> None:
+            print(f'{repr(self)} running')
+            target_jid = self.agent.get('target_jid')
+            self.agent.set('target_jid', None)
+            msg = reviewManagement.Reviews(to=self.agent.get(self.agent.review_collector_key), data=target_jid)
+            await self.send(msg)
+            print('Message sent!')
 
-        recv_accept = self.RecvAcceptBehav()
-        recv_accept_template = Template()
-        recv_accept_template.set_metadata("performative", "inform")
-        recv_accept_template.set_metadata("protocol", "acceptance")
-        self.add_behaviour(recv_accept, recv_accept_template)
+    class ReviewsRespBehav(CyclicBehaviour):
+        async def run(self) -> None:
+            print(f'{repr(self)} running')
+            if (msg := await self.receive(timeout=1000)) is not None:
+                print(f'Message received: {msg.body}')
+                self.agent.set('last_received_msg', msg)
 
-        recv_cancel = self.RecvCancelBehav()
-        recv_cancel_template = Template()
-        recv_cancel_template.set_metadata("performative", "inform")
-        recv_cancel_template.set_metadata("protocol", "cancellation")
-        self.add_behaviour(recv_cancel, recv_cancel_template)
+    class ReviewCreationReqBehav(OneShotBehaviour):
+        async def run(self) -> None:
+            print(f'{repr(self)} running')
+            kwargs = self.agent.get('kwargs')
+            self.agent.set('kwargs', None)
 
-        categories_resp_b = self.CategoriesRespBehav()
-        categories_resp_template = Template()
-        categories_resp_template.set_metadata("performative", "inform")
-        categories_resp_template.set_metadata("protocol", "categories")
-        self.add_behaviour(categories_resp_b, categories_resp_template)
+            if (token := self.agent.get('review_tokens').get(kwargs.get('request_id'))) is not None:
+                msg = reviewManagement.ReviewCreation(
+                    to=self.agent.get(self.agent.review_collector_key),
+                    kwargs=kwargs,
+                    token=token,
+                )
+                await self.send(msg)
+                print('Message sent!')
+                tokens = self.agent.get('review_tokens')
+                del tokens[kwargs.get('request_id')]
+                self.agent.set('review_tokens', tokens)
+                print(f'Token deleted: {token}')
 
-        vault_offers_resp_b = self.VaultOffersRespBehav()
-        vault_offers_resp_template = Template()
-        vault_offers_resp_template.set_metadata("performative", "inform")
-        vault_offers_resp_template.set_metadata("protocol", "vault_offers")
-        self.add_behaviour(vault_offers_resp_b, vault_offers_resp_template)
-
-        vault_categories_resp_b = self.VaultCategoriesRespBehav()
-        vault_categories_resp_template = Template()
-        vault_categories_resp_template.set_metadata("performative", "inform")
-        vault_categories_resp_template.set_metadata("protocol", "vault_categories")
-        self.add_behaviour(vault_categories_resp_b, vault_categories_resp_template)
-
-        vault_get_resp_b = self.VaultGetRespBehav()
-        vault_get_resp_template = Template()
-        vault_get_resp_template.set_metadata("performative", "inform")
-        vault_get_resp_template.set_metadata("protocol", "vault_get")
-        self.add_behaviour(vault_get_resp_b, vault_get_resp_template)
-
-        services_resp_b = self.ServicesRespBehav()
-        services_resp_template = Template()
-        services_resp_template.set_metadata("performative", "inform")
-        services_resp_template.set_metadata("protocol", "local_services")
-        self.add_behaviour(services_resp_b, services_resp_template)
-
+    class ReviewTokenRespBehav(CyclicBehaviour):
+        async def run(self) -> None:
+            print(f'{repr(self)} running')
+            if (msg := await self.receive(timeout=1000)) is not None:
+                print(f'Message received: {msg.body}')
+                dct = json.loads(msg.body)
+                token = Token.from_dict(dct)
+                tokens = self.agent.get('review_tokens')
+                tokens.update({token.request_id: token})
+                self.set('review_tokens', tokens)
+                self.agent.set('last_received_msg', msg)
 
 

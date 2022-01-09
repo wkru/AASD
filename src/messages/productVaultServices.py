@@ -2,7 +2,7 @@ import json
 
 from spade.message import Message
 
-from config import ONTOLOGY
+from src.config import ONTOLOGY
 
 
 class OffersRetrieve(Message):

@@ -1,8 +1,16 @@
 import time
+import logging
+from typing import Type
+
+from spade.agent import Agent
 
 from agents.informationBroker import InformationBrokerAgent
 from agents.user import UserAgent
 from agents.brokerDirectory import BrokerDirectoryAgent
+from agents.reviewCollector import ReviewCollectorAgent
+
+from factories.abstractFactory import AbstractFactory
+from factories.reviewCollector import ReviewCollectorFactory
 
 from agents.productVault import ProductVaultAgent
 from messages import productVaultServices, requestManagement
@@ -11,23 +19,25 @@ from utils import Location
 
 import ui
 
-def create_agent(agent_cls, jid):
-    return agent_cls(jid, "aasd")
+agents: list[Agent] = []
 
 
-if __name__ == "__main__":
+def create_agent(agent_cls: Type[Agent], jid: str) -> Agent:
+    agent = agent_cls(f'{jid}@localhost', "aasd")
+    agents.append(agent)
+    return agent
+
+
+def main():
     bd_agent = create_agent(BrokerDirectoryAgent, "broker-directory@localhost")
-    _ = bd_agent.start()
     rragent = create_agent(InformationBrokerAgent, "information-broker-1@localhost")
-    future = rragent.start()
-    future.result()  # wait for receiver agent to be prepared.
     pvagent = create_agent(ProductVaultAgent, "product-vault-1@localhost")
-    future = pvagent.start()
-    future.result()  # wait for receiver agent to be prepared.
-    useragent1 = UserAgent("user1@localhost", "aasd")
-    useragent1.start()
-    useragent2 = UserAgent("user2@localhost", "aasd")
-    useragent2.start()
+    useragent1 = create_agent(UserAgent, "user1")
+    useragent2 = create_agent(UserAgent, "user2")
+
+    for a in agents:
+        future = a.start()
+        future.result()
 
     # useragent1.set('location', Location(1, 1))
     # useragent1.add_behaviour(UserAgent.ServicesReqBehav())
@@ -86,10 +96,12 @@ if __name__ == "__main__":
         try:
             time.sleep(1)
         except KeyboardInterrupt:
-            useragent1.stop()
-            useragent2.stop()
-            rragent.stop()
-            pvagent.stop()
-            bd_agent.stop()
+            for a in agents:
+                a.stop()
             break
     print("Agents finished")
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    main()
