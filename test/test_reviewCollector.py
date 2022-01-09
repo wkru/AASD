@@ -62,7 +62,7 @@ class TestReviewCollector(unittest.TestCase):
     def test_leaderboard_calculated_correctly(self):
         review1 = Review('1', rating=1, request_id=0, from_='a', to='b')
         review2 = Review('1', rating=2, request_id=0, from_='a', to='b')
-        review5 = Review('1', rating=2, request_id=5, from_='a', to='b')
+        review5 = Review('1', rating=5, request_id=0, from_='a', to='b')
         reviews = {
             'user1': [review5, review1],
             'user2': [review1, review2],
