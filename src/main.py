@@ -1,5 +1,6 @@
 import time
 from typing import Type
+import logging
 
 from spade.agent import Agent
 
