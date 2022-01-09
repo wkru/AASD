@@ -13,6 +13,9 @@ class Token:
             return False
         return self.hash_ == other.hash_
 
+    def __repr__(self):
+        return f'Token({self.request_id=}, {self.from_=}, {self.to=})'
+
     @classmethod
     def from_dict(cls, dct):
         token = cls(0, '', '')

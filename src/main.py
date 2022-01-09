@@ -97,9 +97,9 @@ def main():
             for a in agents:
                 a.stop()
             break
-    print("Agents finished")
+    logging.info("Agents finished")
 
 
 if __name__ == "__main__":
-    # logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.INFO)
     main()
