@@ -5,14 +5,15 @@ from spade.behaviour import OneShotBehaviour, CyclicBehaviour
 from spade.template import Template
 
 from src.messages import requestManagement, reviewManagement
+from src.misc.review import ReviewToken
 
 
 class UserAgent(Agent):
     review_collector_key = 'review_collector'
 
     async def setup(self):
-        if self.get(self.review_collector_key) is None:
-            self.set(self.review_collector_key, 'review-collector-0@localhost')
+        self.set(self.review_collector_key, 'review-collector-0@localhost')
+        self.set('review_tokens', {})
 
         # print("SenderAgent started")
         # b = self.AskForRequestsBehav()
@@ -24,10 +25,17 @@ class UserAgent(Agent):
             leaderboard_resp_b,
             Template(metadata=reviewManagement.LeaderboardResponse.metadata),
         )
+
         reviews_b = self.ReviewsRespBehav()
         self.add_behaviour(
             reviews_b,
             Template(metadata=reviewManagement.ReviewsResponse.metadata),
+        )
+
+        review_token_resp_b = self.ReviewTokenRespBehav()
+        self.add_behaviour(
+            review_token_resp_b,
+            Template(metadata=reviewManagement.ReviewToken.metadata),
         )
 
     class RecvBehav(OneShotBehaviour):
@@ -105,4 +113,9 @@ class UserAgent(Agent):
             print(f'{repr(self)} running')
             if (msg := await self.receive(timeout=1000)) is not None:
                 print(f'Message received: {msg.body}')
+                dct = json.loads(msg.body)
+                token = ReviewToken.from_dict(dct)
+                tokens = self.agent.get('review_tokens')
+                tokens.update({token.request_id: token})
+                self.set('review_tokens', tokens)
                 self.agent.set('last_received_msg', msg)

@@ -107,16 +107,26 @@ class ReviewCollectorAgent(Agent):
                     print(f'Review creation failed: {kwargs}')
 
     class ReviewTokenCreationBehav(CyclicBehaviour):
+        async def send_tokens(self, token: ReviewToken, jids: list[str]) -> None:
+            for jid in jids:
+                msg = reviewManagement.ReviewToken(to=jid, token=token)
+                await self.send(msg)
+
         async def run(self) -> None:
             print(f'{repr(self)} started')
             if (msg := await self.receive(timeout=1000)) is not None:
                 print(f'Message received: {msg.body}')
+
                 token_data = json.loads(msg.body)
                 request_id = token_data.get('request_id')
                 user_ids = token_data.get('user_ids')
+
                 token = ReviewToken(request_id, user_ids)
+
                 tokens = self.get('tokens')
                 if tokens.get(request_id) is None:
                     tokens[request_id] = token
                     self.set('tokens', tokens)
                     print('Token list updated')
+                    await self.send_tokens(token, user_ids)
+                    print(f'Tokens are sent to {user_ids}')
