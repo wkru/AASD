@@ -5,7 +5,7 @@ from spade.behaviour import CyclicBehaviour, OneShotBehaviour, PeriodicBehaviour
 from spade.template import Template
 
 from src.messages import reviewManagement
-from src.misc.review import Review, ReviewToken
+from src.misc.review import Review, Token
 
 
 class ReviewCollectorAgent(Agent):
@@ -107,7 +107,7 @@ class ReviewCollectorAgent(Agent):
                     print(f'Review creation failed: {kwargs}')
 
     class ReviewTokenCreationBehav(CyclicBehaviour):
-        async def send_tokens(self, token: ReviewToken, jids: list[str]) -> None:
+        async def send_tokens(self, token: Token, jids: list[str]) -> None:
             for jid in jids:
                 msg = reviewManagement.ReviewToken(to=jid, token=token)
                 await self.send(msg)
@@ -121,7 +121,7 @@ class ReviewCollectorAgent(Agent):
                 request_id = token_data.get('request_id')
                 user_ids = token_data.get('user_ids')
 
-                token = ReviewToken(request_id, user_ids)
+                token = Token(request_id, user_ids)
 
                 tokens = self.get('tokens')
                 if tokens.get(request_id) is None:

@@ -3,7 +3,7 @@ import json
 from spade.message import Message
 
 from src.config import ONTOLOGY
-from src.misc.review import Review, ReviewToken as Token
+from src.misc.review import Review, Token
 
 
 class Leaderboard(Message):

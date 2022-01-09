@@ -5,7 +5,7 @@ from spade.behaviour import OneShotBehaviour, CyclicBehaviour
 from spade.template import Template
 
 from src.messages import requestManagement, reviewManagement
-from src.misc.review import ReviewToken
+from src.misc.review import Token
 
 
 class UserAgent(Agent):
@@ -114,7 +114,7 @@ class UserAgent(Agent):
             if (msg := await self.receive(timeout=1000)) is not None:
                 print(f'Message received: {msg.body}')
                 dct = json.loads(msg.body)
-                token = ReviewToken.from_dict(dct)
+                token = Token.from_dict(dct)
                 tokens = self.agent.get('review_tokens')
                 tokens.update({token.request_id: token})
                 self.set('review_tokens', tokens)

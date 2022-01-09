@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 
-class ReviewToken:
+class Token:
     def __init__(self, request_id: int, user_ids: list):
         self.request_id = request_id
         self.hash_ = hash(str(request_id) + str(user_ids))
