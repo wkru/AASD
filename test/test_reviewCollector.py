@@ -30,10 +30,6 @@ def review_setup():
 
 
 class TestReviewCollector(unittest.TestCase):
-    review_collector = None
-    user = None
-    agents = []
-
     def setUp(self) -> None:
         self.agents = []
         self.review_collector = create_agent(ReviewCollectorAgent, 'review-collector-0')
