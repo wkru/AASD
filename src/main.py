@@ -32,6 +32,7 @@ def main():
     bd_agent = create_agent(BrokerDirectoryAgent, "broker-directory@localhost")
     rragent = create_agent(InformationBrokerAgent, "information-broker-1@localhost")
     pvagent = create_agent(ProductVaultAgent, "product-vault-1@localhost")
+    rcagent = create_agent(ReviewCollectorAgent, 'review-collector-1@localhost')
     useragent1 = create_agent(UserAgent, "user1")
     useragent2 = create_agent(UserAgent, "user2")
 
@@ -39,6 +40,7 @@ def main():
         future = a.start()
         future.result()
 
+    rragent.set(InformationBrokerAgent.review_collector_key, 'review-collector-1@localhost')
     # useragent1.set('location', Location(1, 1))
     # useragent1.add_behaviour(UserAgent.ServicesReqBehav())
 

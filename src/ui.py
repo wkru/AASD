@@ -169,6 +169,7 @@ def get_product_from_vault(id):
     active_user.add_behaviour(UserAgent.VaultGetReqBehav())
 
 def add_review():
+    global active_user
     pass
 
 def print_reviews():

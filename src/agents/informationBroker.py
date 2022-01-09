@@ -13,7 +13,6 @@ class InformationBrokerAgent(Agent):
     review_collector_key = 'review_collector'
 
     async def setup(self):
-        self.set(self.review_collector_key, 'review-collector-0@localhost')
         self.set("requests", [{'id': 1, 'category': 'salt', 'comment': 'Himalaya salt', 'username': 'user1@localhost'},
                          {"id": "f9a4be60598dac4d8c28157c2a342cff4e3caed484fc27bab97be2790d75caa5",
                           "username": "user2@localhost", "category": "salt", "comment": "Himalaya salt"}
@@ -108,6 +107,17 @@ class InformationBrokerAgent(Agent):
                     # send acceptance message to user who issued the request
                     forward_msg = requestManagement.AcceptanceForward(to=request_to_forward["username"], data=new_data)
 
+                    # generate review tokens
+                    token_to_issue = {'request_id': request_to_forward['id'],
+                                        'from_': str(msg.sender),
+                                        'to': request_to_forward['username']}
+                    msg = reviewManagement.ReviewTokenCreation(
+                            to=self.agent.get(self.agent.review_collector_key),
+                            request_id=token_to_issue.get('request_id'),
+                            user_ids=[token_to_issue.get('from_'), token_to_issue.get('to')]
+                        )
+                    await self.send(msg)
+
                     # cancel request for other users apart from issuer and acceptor
                     for user in self.agent.get("users"):
                         if user != request_to_forward["username"] and user != str(msg.sender):
@@ -159,20 +169,3 @@ class InformationBrokerAgent(Agent):
                 except:
                     print('User {} not in active users'.format(msg.sender))
 
-
-
-    class ReviewTokenCreationReqBehav(OneShotBehaviour):
-        async def run(self) -> None:
-            print(f'{repr(self)} running')
-            tokens_to_issue = self.agent.get('tokens_to_issue')
-            if len(tokens_to_issue) and (token_data := tokens_to_issue.pop(0)):
-                msg = reviewManagement.ReviewTokenCreation(
-                    to=self.agent.get(self.agent.review_collector_key),
-                    request_id=token_data.get('request_id'),
-                    user_ids=[token_data.get('from_'), token_data.get('to')]
-                )
-                await self.send(msg)
-                print('Message sent!')
-                self.set('tokens_to_issue', tokens_to_issue)
-            else:
-                print('No tokens to issue')
