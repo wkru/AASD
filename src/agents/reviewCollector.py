@@ -124,14 +124,15 @@ class ReviewCollectorAgent(Agent):
 
                 token_data = json.loads(msg.body)
                 request_id = token_data.get('request_id')
-                user_ids = token_data.get('user_ids')
+                from_ = token_data.get('from_')
+                to = token_data.get('to')
 
-                token = Token(request_id, user_ids)
+                token = Token(request_id, from_, to)
 
                 tokens = self.get('tokens')
                 if tokens.get(request_id) is None:
                     tokens[request_id] = token
                     self.set('tokens', tokens)
                     print('Token list updated')
-                    await self.send_tokens(token, user_ids)
-                    print(f'Tokens are sent to {user_ids}')
+                    await self.send_tokens(token, [from_, to])
+                    print(f'Tokens are sent to {[from_, to]}')

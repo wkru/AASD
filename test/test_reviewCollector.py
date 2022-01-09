@@ -124,7 +124,7 @@ class TestReviewCollector(unittest.TestCase):
         kwargs = {
             'contents': 'test', 'rating': 5, 'request_id': 1, 'from_': user0, 'to': user1
         }
-        token = Token(request_id=1, user_ids=[user0, user1])
+        token = Token(request_id=1, from_=user0, to=user1)
         self.user.set('kwargs', kwargs)
         self.user.set('review_tokens', {1: token})
         self.review_collector.set('tokens', {1: token})
@@ -142,7 +142,7 @@ class TestReviewCollector(unittest.TestCase):
         kwargs = {
             'contents': 'test', 'rating': 5, 'request_id': 1, 'from_': user0, 'to': user1
         }
-        token = Token(request_id=10, user_ids=[user0, user1])
+        token = Token(request_id=10, from_=user0, to=user1)
         self.user.set('kwargs', kwargs)
         self.user.set('review_tokens', {1: token})
         self.user.add_behaviour(UserAgent.ReviewCreationReqBehav())

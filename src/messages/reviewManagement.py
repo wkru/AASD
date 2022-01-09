@@ -49,8 +49,8 @@ class ReviewCreation(Message):
 class ReviewTokenCreation(Message):
     metadata = {'performative': 'request', 'protocol': 'review-token-creation'}
 
-    def __init__(self, to: str, request_id: int, user_ids: list):
-        body = json.dumps({'request_id': request_id, 'user_ids': user_ids})
+    def __init__(self, to: str, request_id: int, from_: str):
+        body = json.dumps({'request_id': request_id, 'from_': from_, 'to': to})
         super().__init__(to=to, body=body, metadata=dict(self.metadata, **{'ontology': ONTOLOGY}))
 
 
