@@ -27,7 +27,7 @@ class UserAgent(Agent):
 
         incoming_request = self.IncomingRequestBehav()
         incoming_request_template = Template()
-        incoming_request_template.set_metadata("performative", "inform")
+        incoming_request_template.set_metadata("performative", "propagate")
         incoming_request_template.set_metadata("protocol", "addition")
         self.add_behaviour(incoming_request, incoming_request_template)
 
@@ -45,7 +45,7 @@ class UserAgent(Agent):
 
         recv_cancel = self.RecvCancelBehav()
         recv_cancel_template = Template()
-        recv_cancel_template.set_metadata("performative", "inform")
+        recv_cancel_template.set_metadata("performative", "propagate")
         recv_cancel_template.set_metadata("protocol", "cancellation")
         self.add_behaviour(recv_cancel, recv_cancel_template)
 

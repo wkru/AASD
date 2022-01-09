@@ -31,19 +31,19 @@ class InformationBrokerAgent(Agent):
 
         add_request = self.AddRequestBehav()
         add_request_template = Template()
-        add_request_template.set_metadata("performative", "request")
+        add_request_template.set_metadata("performative", "propagate")
         add_request_template.set_metadata("protocol", "addition")
         self.add_behaviour(add_request, add_request_template)
 
         accepted_request = self.AcceptedBehav()
         accepted_request_template = Template()
-        accepted_request_template.set_metadata("performative", "request")
+        accepted_request_template.set_metadata("performative", "proxy")
         accepted_request_template.set_metadata("protocol", "acceptance")
         self.add_behaviour(accepted_request, accepted_request_template)
 
         cancelled_request = self.CancelledBehav()
         cancelled_request_template = Template()
-        cancelled_request_template.set_metadata("performative", "request")
+        cancelled_request_template.set_metadata("performative", "propagate")
         cancelled_request_template.set_metadata("protocol", "cancellation")
         self.add_behaviour(cancelled_request, cancelled_request_template)
 
@@ -76,18 +76,17 @@ class InformationBrokerAgent(Agent):
         async def run(self):
             msg = await self.receive(timeout=1000)  # wait for a message for 10 seconds
             if msg:
-                if msg.metadata['performative'] == 'request':
-                    body = json.loads(msg.body)
-                    request = {"id": secrets.token_hex(nbytes=32),
-                               "username": str(msg.sender),
-                               "category": body["category"],
-                               "comment": body["comment"]}
-                    requests = self.agent.get("requests")
-                    requests.append(request)
-                    self.agent.set("requests", requests)
-                    for user in self.agent.get("users"):
-                        resp = requestManagement.BroadcastNew(to=user, data=request)
-                        await self.send(resp)
+                body = json.loads(msg.body)
+                request = {"id": secrets.token_hex(nbytes=32),
+                           "username": str(msg.sender),
+                           "category": body["category"],
+                           "comment": body["comment"]}
+                requests = self.agent.get("requests")
+                requests.append(request)
+                self.agent.set("requests", requests)
+                for user in self.agent.get("users"):
+                    resp = requestManagement.BroadcastNew(to=user, data=request)
+                    await self.send(resp)
 
     class AcceptedBehav(CyclicBehaviour):
         async def run(self):
