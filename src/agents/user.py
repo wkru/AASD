@@ -215,8 +215,6 @@ class UserAgent(Agent):
             msg = await self.receive(timeout=1000)
             if msg:
                 logging.info("Message received with content: {}".format(msg.body))
-            else:
-                pass
 
     class ServicesReqBehav(OneShotBehaviour):
         async def run(self):
@@ -235,9 +233,7 @@ class UserAgent(Agent):
                     self.agent.set('review_collector_jid', msg_contents['review-collector'])
                     self.agent.set('product_vault_jid', msg_contents['product-vault'])
                 except:
-                    logging.info('Malformed ServicesRespond message received')
-            else:
-                pass
+                    logging.error('Malformed ServicesRespond message received')
 
     class Register(OneShotBehaviour):
         async def run(self):

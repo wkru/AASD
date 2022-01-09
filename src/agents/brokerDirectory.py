@@ -9,7 +9,6 @@ from src.messages import serviceDiscovery
 from src.config import SERVICES
 from src.misc.location import Location
 
-
 class BrokerDirectoryAgent(Agent):
     async def setup(self):
         service_request = self.ServiceRequest()
@@ -36,4 +35,5 @@ class BrokerDirectoryAgent(Agent):
                     resp = serviceDiscovery.ServicesRespond(to=str(msg.sender), data=SERVICES[index_min][1])
                     await self.send(resp)
                 except:
-                    logging.info('Malformed ServicesRequest message received')
+                    logging.error('Malformed ServicesRequest message received')
+
