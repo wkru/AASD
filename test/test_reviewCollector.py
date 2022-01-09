@@ -59,6 +59,25 @@ class TestReviewCollector(unittest.TestCase):
         self.assertEqual(json.loads(msg.body), leaderboard)
 
     @timeout_decorator.timeout(10)
+    def test_leaderboard_calculated_correctly(self):
+        review1 = Review('1', rating=1, request_id=0, from_='a', to='b')
+        review2 = Review('1', rating=2, request_id=0, from_='a', to='b')
+        review5 = Review('1', rating=2, request_id=5, from_='a', to='b')
+        reviews = {
+            'user1': [review5, review1],
+            'user2': [review1, review2],
+            'user3': [review1] * 2,
+            'user0': [review5] * 3,
+        }
+        self.review_collector.set('reviews', reviews)
+        self.review_collector.update_leaderboard()
+        self.user.add_behaviour(UserAgent.LeaderboardReqBehav())
+
+        msg = wait_and_get(self.user, 'last_received_msg')
+
+        self.assertEqual(json.loads(msg.body), ['user0', 'user1', 'user2', 'user3'])
+
+    @timeout_decorator.timeout(10)
     def test_no_reviews(self):
         *_, user2, reviews = review_setup()
 

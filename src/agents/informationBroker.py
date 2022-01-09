@@ -191,7 +191,6 @@ class InformationBrokerAgent(Agent):
                     print('User {} not in active users'.format(msg.sender))
                 print("Deregister Message received with content: {} {}".format(msg.body, str(msg.sender)))
 
-
     class ReviewTokenCreationReqBehav(OneShotBehaviour):
         async def run(self) -> None:
             print(f'{repr(self)} running')
