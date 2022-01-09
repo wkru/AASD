@@ -114,7 +114,7 @@ class InformationBrokerAgent(Agent):
                     msg = reviewManagement.ReviewTokenCreation(
                             to=self.agent.get(self.agent.review_collector_key),
                             request_id=token_to_issue.get('request_id'),
-                            user_ids=[token_to_issue.get('from_'), token_to_issue.get('to')]
+                            from_to=(token_to_issue.get('from_'), token_to_issue.get('to'),)
                         )
                     await self.send(msg)
 
