@@ -15,6 +15,7 @@ class UserAgent(Agent):
 
             if (msg := await self.receive(timeout=1000)) is not None:
                 msg_json = json.loads(msg.body)
+                self.agent.set('requests', msg_json)
                 for product in msg_json:
                     print('ID:', product['id'])
                     print('Category:', product['category'])
@@ -109,6 +110,8 @@ class UserAgent(Agent):
             print("CategoriesRespBehav running")
             msg = await self.receive(timeout=1000)
             if msg:
+                msg_body = json.loads(msg.body)
+                self.agent.set('categories', msg_body)
                 print("Message received with content: {}".format(msg.body))
 
     class VaultOffersReqBehav(OneShotBehaviour):
@@ -123,6 +126,8 @@ class UserAgent(Agent):
             print("VaultOffersRespBehav running")
             msg = await self.receive(timeout=1000)
             if msg:
+                msg_body = json.loads(msg.body)
+                self.agent.set('vault_products', msg_body)
                 print("Message received with content: {}".format(msg.body))
 
     class VaultCategoriesReqBehav(OneShotBehaviour):
@@ -137,6 +142,8 @@ class UserAgent(Agent):
             print("VaultCategoriesRespBehav running")
             msg = await self.receive(timeout=1000)
             if msg:
+                msg_body = json.loads(msg.body)
+                self.agent.set('vault_categories', msg_body)
                 print("Message received with content: {}".format(msg.body))
 
     class VaultAddBehav(OneShotBehaviour):
@@ -204,10 +211,14 @@ class UserAgent(Agent):
             await self.send(msg)
 
     async def setup(self):
-        # self.set("new_request", {'category': 'salt', 'comment': 'Himalaya salt'})
+        self.set("new_request", {'category': 0, 'comment': 'Himalaya salt'})
         self.set("contact_data", {'phone': "000-000-000", "email": "test@test.pl"})
         self.set("notifications", [{'id': 'f9a4be60598dac4d8c28157c2a342cff4e3caed484fc27bab97be2790d75caa5',
                                     'category': 'salt', 'comment': 'Himalaya salt'}])
+        self.set('categories', None)
+        self.set('vault_categories', None)
+        self.set('requests', None)
+        self.set('vault_products', None)
 
         print("SenderAgent started")
 
