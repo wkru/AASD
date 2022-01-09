@@ -13,9 +13,11 @@ active_user = None
 next_user_id = 0
 new_user_added = False
 
-def custom_input(prompt='Wpisz numer', cls=int):
+def custom_input(prompt='Wpisz numer', cls=int, cancel=True):
     while True:
         inp = input(prompt + ': ')
+        if cancel and inp == '/':
+            return None
         try:
             res = cls(inp)
             break
@@ -24,16 +26,26 @@ def custom_input(prompt='Wpisz numer', cls=int):
 
     return res
 
-def print_menu(options, prompt='Wybierz dostępną opcję:'):
+def print_menu(options, prompt='Wybierz dostępną opcję:', cancel=True):
     print('\n' + prompt)
+    if cancel:
+        print('/ Anuluj')
     for i, option in enumerate(options):
         print(i, option[0])
-    chosen = custom_input()
+    chosen = custom_input(cancel=cancel)
 
-    return (i, options[chosen])
+    if chosen is None:
+        return None
 
-def execute_from_menu(options, prompt='Wybierz dostępną opcję:'):
-    (_, chosen) = print_menu(options, prompt)
+    return i, options[chosen]
+
+
+def execute_from_menu(options, prompt='Wybierz dostępną opcję:', cancel=True):
+    ret = print_menu(options, prompt, cancel)
+    if ret is None:
+        return ret
+
+    chosen = ret[1]
 
     if chosen[2] is None:
         chosen[1]()
@@ -199,7 +211,7 @@ def run():
         if active_user is None:
             change_user()
         else:
-            execute_from_menu(main_options)
+            execute_from_menu(main_options, cancel=False)
 
 
 

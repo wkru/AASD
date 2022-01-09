@@ -98,7 +98,7 @@ class UserAgent(Agent):
             Template(metadata=reviewManagement.ReviewToken.metadata),
         )
 
-    class RecvBehav(OneShotBehaviour):
+    class RecvBehav(CyclicBehaviour):
         async def run(self):
 
             if (msg := await self.receive(timeout=1000)) is not None:
