@@ -3,7 +3,7 @@ import json
 import logging
 
 from spade.agent import Agent
-from spade.behaviour import OneShotBehaviour, CyclicBehaviour
+from spade.behaviour import CyclicBehaviour
 from spade.template import Template
 
 from src.messages import requestManagement

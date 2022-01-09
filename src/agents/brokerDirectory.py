@@ -5,9 +5,8 @@ from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
 from spade.template import Template
 
-from src.config import SERVICES
-
 from src.messages import serviceDiscovery
+from src.config import SERVICES
 from src.misc.location import Location
 
 class BrokerDirectoryAgent(Agent):
@@ -37,3 +36,4 @@ class BrokerDirectoryAgent(Agent):
                     await self.send(resp)
                 except:
                     logging.error('Malformed ServicesRequest message received')
+

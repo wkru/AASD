@@ -8,7 +8,6 @@ from spade.template import Template
 
 from src.messages import requestManagement, productVaultServices, serviceDiscovery, userRegistration, reviewManagement
 from src.misc.review import Token
-
 from src.config import BROKER_DIRECTORY_JID
 
 
@@ -216,8 +215,6 @@ class UserAgent(Agent):
             msg = await self.receive(timeout=1000)
             if msg:
                 logging.info("Message received with content: {}".format(msg.body))
-            else:
-                pass
 
     class ServicesReqBehav(OneShotBehaviour):
         async def run(self):
@@ -237,8 +234,6 @@ class UserAgent(Agent):
                     self.agent.set('product_vault_jid', msg_contents['product-vault'])
                 except:
                     logging.error('Malformed ServicesRespond message received')
-            else:
-                pass
 
     class Register(OneShotBehaviour):
         async def run(self):
