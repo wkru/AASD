@@ -47,6 +47,10 @@ class TestReviewCollector(unittest.TestCase):
 
         self.user.set(UserAgent.review_collector_key, str(self.review_collector.jid))
 
+    def tearDown(self) -> None:
+        for a in self.agents:
+            a.stop()
+
     @timeout_decorator.timeout(10)
     def test_leaderboard(self):
         leaderboard = ['a', 'b', 'c']
@@ -130,10 +134,6 @@ class TestReviewCollector(unittest.TestCase):
 
         new_review = Review(**kwargs)
         self.assertEqual(self.review_collector.get('reviews')[user1], old_reviews + [new_review])
-
-    def tearDown(self) -> None:
-        for a in self.agents:
-            a.stop()
 
 
 if __name__ == '__main__':
