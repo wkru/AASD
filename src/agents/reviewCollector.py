@@ -39,7 +39,7 @@ class ReviewCollectorAgent(Agent):
             Template(metadata=reviewManagement.Leaderboard.metadata),
         )
 
-        users_reviews_b = self.UserReviewsBehav()
+        users_reviews_b = self.ReviewsBehav()
         self.add_behaviour(
             users_reviews_b,
             Template(metadata=reviewManagement.Reviews.metadata)
@@ -73,7 +73,7 @@ class ReviewCollectorAgent(Agent):
     def get_reviews(self, jid: str) -> list[Review]:
         return self.get('reviews').get(jid, [])
 
-    class UserReviewsBehav(CyclicBehaviour):
+    class ReviewsBehav(CyclicBehaviour):
         async def run(self) -> None:
             print(f'{repr(self)} started')
             if (msg := await self.receive(timeout=1000)) is not None:
