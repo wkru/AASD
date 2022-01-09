@@ -1,5 +1,6 @@
 import secrets
 import json
+import logging
 
 from spade.agent import Agent
 from spade.behaviour import OneShotBehaviour, CyclicBehaviour
@@ -167,4 +168,4 @@ class InformationBrokerAgent(Agent):
                     users.remove(str(msg.sender))
                     self.agent.set('users', users)
                 except:
-                    print('User {} not in active users'.format(msg.sender))
+                    logging.info('User {} not in active users'.format(msg.sender))

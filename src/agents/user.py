@@ -1,5 +1,6 @@
 import json
 from queue import Queue
+import logging
 
 from spade.agent import Agent
 from spade.behaviour import OneShotBehaviour, CyclicBehaviour
@@ -146,12 +147,12 @@ class UserAgent(Agent):
         async def run(self):
             if (msg := await self.receive(timeout=1000)) is not None:
                 msg_json = json.loads(msg.body)
-                print("Twoje zgłoszenie zostało zaakceptowane!")
-                print('ID:', msg_json['accepted_request']['id'])
-                print('Category:', msg_json['accepted_request']['category'])
-                print('Comment:', msg_json['accepted_request']['comment'])
-                print('Username:', msg_json['accepted_request']['username'])
-                print('Contact info:', msg_json['contact'])
+                logging.info("Twoje zgłoszenie zostało zaakceptowane!")
+                logging.info('ID:', msg_json['accepted_request']['id'])
+                logging.info('Category:', msg_json['accepted_request']['category'])
+                logging.info('Comment:', msg_json['accepted_request']['comment'])
+                logging.info('Username:', msg_json['accepted_request']['username'])
+                logging.info('Contact info:', msg_json['contact'])
 
     class RecvCancelBehav(CyclicBehaviour):
         async def run(self):
@@ -215,7 +216,7 @@ class UserAgent(Agent):
         async def run(self):
             msg = await self.receive(timeout=1000)
             if msg:
-                print("Message received with content: {}".format(msg.body))
+                logging.info("Message received with content: {}".format(msg.body))
             else:
                 pass
 
@@ -236,7 +237,7 @@ class UserAgent(Agent):
                     self.agent.set('review_collector_jid', msg_contents['review-collector'])
                     self.agent.set('product_vault_jid', msg_contents['product-vault'])
                 except:
-                    print('Malformed ServicesRespond message received')
+                    logging.info('Malformed ServicesRespond message received')
             else:
                 pass
 
@@ -252,16 +253,16 @@ class UserAgent(Agent):
 
     class LeaderboardReqBehav(OneShotBehaviour):
         async def run(self):
-            print(f'{repr(self)} running')
+            logging.info(f'{repr(self)} running')
             msg = reviewManagement.Leaderboard(to=self.agent.get(self.agent.review_collector_key))
             await self.send(msg)
-            print('Message sent!')
+            logging.info('Message sent!')
 
     class LeaderboardRespBehav(CyclicBehaviour):
         async def run(self):
-            print(f'{repr(self)} running')
+            logging.info(f'{repr(self)} running')
             if (msg := await self.receive(timeout=1000)) is not None:
-                print(f'Message received: {msg.body}')
+                logging.info(f'Message received: {msg.body}')
                 self.agent.set('last_received_msg', msg)
                 leaderboard = json.loads(msg.body)
                 queue = self.agent.get('queue')
@@ -269,18 +270,18 @@ class UserAgent(Agent):
 
     class ReviewsReqBehav(OneShotBehaviour):
         async def run(self) -> None:
-            print(f'{repr(self)} running')
+            logging.info(f'{repr(self)} running')
             target_jid = self.agent.get('target_jid')
             self.agent.set('target_jid', None)
             msg = reviewManagement.Reviews(to=self.agent.get(self.agent.review_collector_key), data=target_jid)
             await self.send(msg)
-            print('Message sent!')
+            logging.info('Message sent!')
 
     class ReviewsRespBehav(CyclicBehaviour):
         async def run(self) -> None:
-            print(f'{repr(self)} running')
+            logging.info(f'{repr(self)} running')
             if (msg := await self.receive(timeout=1000)) is not None:
-                print(f'Message received: {msg.body}')
+                logging.info(f'Message received: {msg.body}')
                 self.agent.set('last_received_msg', msg)
                 reviews = json.loads(msg.body)
                 queue = self.agent.get('queue')
@@ -288,11 +289,11 @@ class UserAgent(Agent):
 
     class ReviewCreationReqBehav(OneShotBehaviour):
         async def run(self) -> None:
-            print(f'{repr(self)} running')
+            logging.info(f'{repr(self)} running')
             kwargs = self.agent.get('kwargs')
 
-            print(self.agent.get('review_tokens'))
-            print(self.agent.get('kwargs'))
+            logging.info(self.agent.get('review_tokens'))
+            logging.info(self.agent.get('kwargs'))
             if (token := self.agent.get('review_tokens').get(kwargs.get('request_id'))) is not None:
                 msg = reviewManagement.ReviewCreation(
                     to=self.agent.get(self.agent.review_collector_key),
@@ -300,18 +301,18 @@ class UserAgent(Agent):
                     token=token,
                 )
                 await self.send(msg)
-                print('Message sent!')
+                logging.info('Message sent!')
                 tokens = self.agent.get('review_tokens')
                 del tokens[kwargs.get('request_id')]
                 self.agent.set('kwargs', None)
                 self.agent.set('review_tokens', tokens)
-                print(f'Token deleted: {token}')
+                logging.info(f'Token deleted: {token}')
 
     class ReviewTokenRespBehav(CyclicBehaviour):
         async def run(self) -> None:
-            print(f'{repr(self)} running')
+            logging.info(f'{repr(self)} running')
             if (msg := await self.receive(timeout=1000)) is not None:
-                print(f'Message received: {msg.body}')
+                logging.info(f'Message received: {msg.body}')
                 dct = json.loads(msg.body)
                 token = Token.from_dict(dct)
                 tokens = self.agent.get('review_tokens')

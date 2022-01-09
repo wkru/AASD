@@ -1,12 +1,12 @@
-from utils import Location
-
 import json
+import logging
 
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
 from spade.template import Template
 
 from config import SERVICES
+from utils import Location
 
 from messages import serviceDiscovery
 
@@ -36,4 +36,4 @@ class BrokerDirectoryAgent(Agent):
                     resp = serviceDiscovery.ServicesRespond(to=str(msg.sender), data=SERVICES[index_min][1])
                     await self.send(resp)
                 except:
-                    print('Malformed ServicesRequest message received')
+                    logging.info('Malformed ServicesRequest message received')

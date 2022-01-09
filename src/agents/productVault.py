@@ -1,10 +1,12 @@
+import json
+import logging
+
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
 from spade.template import Template
 
 from messages import productVaultServices
 
-import json
 
 class ProductVaultAgent(Agent):
     async def setup(self):
@@ -65,7 +67,7 @@ class ProductVaultAgent(Agent):
                     self.agent.offers[self.agent.next_offer_id] = msg_contents
                     self.agent.next_offer_id += 1
                 except:
-                    print('Malformed AddToProductVault message received')
+                    logging.info('Malformed AddToProductVault message received')
 
 
     class GetBehav(CyclicBehaviour):
@@ -82,4 +84,4 @@ class ProductVaultAgent(Agent):
 
                     await self.send(resp)
                 except:
-                    print('Malformed GetFromProductVault message received')
+                    logging.info('Malformed GetFromProductVault message received')

@@ -9,13 +9,7 @@ from agents.user import UserAgent
 from agents.brokerDirectory import BrokerDirectoryAgent
 from agents.reviewCollector import ReviewCollectorAgent
 
-from factories.abstractFactory import AbstractFactory
-from factories.reviewCollector import ReviewCollectorFactory
-
 from agents.productVault import ProductVaultAgent
-from messages import productVaultServices, requestManagement
-
-from utils import Location
 
 import ui
 
@@ -101,9 +95,9 @@ def main():
             for a in agents:
                 a.stop()
             break
-    print("Agents finished")
+    logging.info("Agents finished")
 
 
 if __name__ == "__main__":
-    # logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.INFO)
     main()
