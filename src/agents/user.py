@@ -1,5 +1,4 @@
 import json
-import logging
 
 from spade.agent import Agent
 from spade.behaviour import OneShotBehaviour, CyclicBehaviour
@@ -9,11 +8,12 @@ from messages import requestManagement, reviewManagement
 
 
 class UserAgent(Agent):
-    def __init__(self, jid: str, password: str):
-        super().__init__(jid, password)
-        self._review_collector_jid = 'review-collector-0@localhost'
+    review_collector_key = 'review_collector'
 
     async def setup(self):
+        if self.get(self.review_collector_key) is None:
+            self.set(self.review_collector_key, 'review-collector-0@localhost')
+
         # print("SenderAgent started")
         # b = self.AskForRequestsBehav()
         # self.add_behaviour(b)
@@ -60,30 +60,30 @@ class UserAgent(Agent):
 
     class LeaderboardReqBehav(OneShotBehaviour):
         async def run(self):
-            logging.info(f'{repr(self)} running')
-            msg = reviewManagement.Leaderboard(to=self.agent._review_collector_jid)
+            print(f'{repr(self)} running')
+            msg = reviewManagement.Leaderboard(to=self.agent.get(self.agent.review_collector_key))
             await self.send(msg)
-            logging.info('Message sent!')
+            print('Message sent!')
 
     class LeaderboardRespBehav(CyclicBehaviour):
         async def run(self):
-            logging.info(f'{repr(self)} running')
+            print(f'{repr(self)} running')
             if (msg := await self.receive(timeout=1000)) is not None:
-                logging.info(f'Message received: {msg.body}')
+                print(f'Message received: {msg.body}')
                 self.agent.set('last_received_msg', msg)
 
     class ReviewsReqBehav(OneShotBehaviour):
         async def run(self) -> None:
-            logging.info(f'{repr(self)} running')
+            print(f'{repr(self)} running')
             target_jid = self.agent.get('target_jid')
             self.agent.set('target_jid', None)
-            msg = reviewManagement.Reviews(to=self.agent._review_collector_jid, data=target_jid)
+            msg = reviewManagement.Reviews(to=self.agent.get(self.agent.review_collector_key), data=target_jid)
             await self.send(msg)
-            logging.info('Message sent!')
+            print('Message sent!')
 
     class ReviewsRespBehav(CyclicBehaviour):
         async def run(self) -> None:
-            logging.info(f'{repr(self)} running')
+            print(f'{repr(self)} running')
             if (msg := await self.receive(timeout=1000)) is not None:
-                logging.info(f'Message received: {msg.body}')
+                print(f'Message received: {msg.body}')
                 self.agent.set('last_received_msg', msg)

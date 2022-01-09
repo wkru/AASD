@@ -1,5 +1,3 @@
-import logging
-from dataclasses import dataclass
 import json
 
 from spade.agent import Agent
@@ -14,7 +12,8 @@ class ReviewCollectorAgent(Agent):
     def init(self):
         self.tokens = []
 
-        self.set('reviews', {})
+        if self.get('reviews') is None:
+            self.set('reviews', {})
         self.set('leaderboard', [])
 
     def __repr__(self):
@@ -72,9 +71,9 @@ class ReviewCollectorAgent(Agent):
 
     class LeaderboardBehav(CyclicBehaviour):
         async def run(self) -> None:
-            logging.info(f'{repr(self)} started')
+            print(f'{repr(self)} started')
             if (msg := await self.receive(timeout=1000)) is not None:
-                logging.info(f'Message received: {msg.body}')
+                print(f'Message received: {msg.body}')
                 resp = reviewManagement.LeaderboardResponse(to=str(msg.sender), data=self.agent.get('leaderboard'))
                 await self.send(resp)
 
@@ -88,9 +87,9 @@ class ReviewCollectorAgent(Agent):
 
     class UserReviewsBehav(CyclicBehaviour):
         async def run(self) -> None:
-            logging.info(f'{repr(self)} started')
+            print(f'{repr(self)} started')
             if (msg := await self.receive(timeout=1000)) is not None:
-                logging.info(f'Message received: {msg.body}')
+                print(f'Message received: {msg.body}')
                 target_jid = json.loads(msg.body)
                 resp = reviewManagement.ReviewsResponse(to=str(msg.sender), data=self.agent.get_reviews(target_jid))
                 await self.send(resp)
