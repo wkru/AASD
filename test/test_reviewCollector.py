@@ -4,8 +4,8 @@ import json
 import timeout_decorator
 
 import utils
-from factories.reviewCollector import ReviewCollectorFactory
 from agents.user import UserAgent
+from agents.reviewCollector import ReviewCollectorAgent
 from misc.review import Review
 
 
@@ -28,25 +28,29 @@ def review_setup():
     return user0, user1, user2, reviews
 
 
+def create_agent(agent_cls, jid):
+    return agent_cls(f'{jid}@localhost', 'aasd')
+
+
 class TestReviewCollector(unittest.TestCase):
     review_collector = None
     user = None
     agents = []
 
     def setUp(self) -> None:
-        def _create_agent(agent_cls, jid):
-            return agent_cls(f'{jid}@localhost', 'aasd')
-
-        self.user = _create_agent(UserAgent, 'user0')
-        self.review_collector = ReviewCollectorFactory.create_agent()
-        self.agents.append(self.user)
+        self.agents = []
+        self.review_collector = create_agent(ReviewCollectorAgent, 'review-collector-0')
+        self.user = create_agent(UserAgent, 'user0')
         self.agents.append(self.review_collector)
+        self.agents.append(self.user)
 
         for a in self.agents:
             future = a.start()
             future.result()
 
-    @timeout_decorator.timeout(5)
+        self.user.set(UserAgent.review_collector_key, str(self.review_collector.jid))
+
+    @timeout_decorator.timeout(10)
     def test_leaderboard(self):
         leaderboard = ['a', 'b', 'c']
         self.review_collector.set('leaderboard', leaderboard)
@@ -56,7 +60,7 @@ class TestReviewCollector(unittest.TestCase):
 
         self.assertEqual(json.loads(msg.body), leaderboard)
 
-    @timeout_decorator.timeout(100)
+    @timeout_decorator.timeout(10)
     def test_no_reviews(self):
         *_, user2, reviews = review_setup()
 
@@ -68,7 +72,7 @@ class TestReviewCollector(unittest.TestCase):
 
         self.assertEqual(json.loads(msg.body), reviews[user2])
 
-    @timeout_decorator.timeout(100)
+    @timeout_decorator.timeout(10)
     def test_reviews(self):
         user0, *_, reviews = review_setup()
 
@@ -88,7 +92,7 @@ class TestReviewCollector(unittest.TestCase):
 class TestReviewCollectorInner(unittest.TestCase):
     def test_reviews(self):
         user0, user1, _, reviews = review_setup()
-        review_collector = ReviewCollectorFactory.create_agent()
+        review_collector = create_agent(ReviewCollectorAgent, 'review-collector-0')
         review_collector.set('reviews', reviews)
         reviews_user1 = review_collector.get_reviews(user1)
         self.assertEqual(reviews_user1, reviews[user1])
