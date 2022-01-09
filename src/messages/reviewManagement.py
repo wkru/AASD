@@ -35,3 +35,11 @@ class ReviewsResponse(Message):
     def __init__(self, to, data):
         body = json.dumps(data, default=lambda o: o.__dict__ if isinstance(o, Review) else o)
         super().__init__(to=to, body=body, metadata=dict(self.metadata, **{'ontology': ONTOLOGY}))
+
+
+class ReviewCreation(Message):
+    metadata = {'performative': 'request', 'protocol': 'review-collector-review-creation'}
+
+    def __init__(self, to, data):
+        body = json.dumps(data)
+        super().__init__(to=to, body=body, metadata=dict(self.metadata, **{'ontology': ONTOLOGY}))

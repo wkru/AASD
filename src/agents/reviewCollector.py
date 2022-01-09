@@ -32,23 +32,17 @@ class ReviewCollectorAgent(Agent):
         print(f'{repr(self)} started')
         self.init()
 
-        review_creation_b = self.ReviewCreationBehav()
-        self.add_behaviour(
-            review_creation_b,
-            Template(metadata={'performative': 'request'}),
-        )
-
         leaderboard_b = self.LeaderboardBehav()
         self.add_behaviour(
             leaderboard_b,
             Template(metadata=reviewManagement.Leaderboard.metadata),
         )
 
-        review_tokens_creation_b = self.ReviewTokensCreationBehav()
-        self.add_behaviour(
-            review_tokens_creation_b,
-            Template(metadata={'performative': 'request'})
-        )
+        # review_tokens_creation_b = self.ReviewTokensCreationBehav()
+        # self.add_behaviour(
+        #     review_tokens_creation_b,
+        #     Template(metadata={'performative': 'request'})
+        # )
 
         users_reviews_b = self.UserReviewsBehav()
         self.add_behaviour(
@@ -56,13 +50,11 @@ class ReviewCollectorAgent(Agent):
             Template(metadata=reviewManagement.Reviews.metadata)
         )
 
-    class ReviewCreationBehav(CyclicBehaviour):
-        def __init__(self):
-            super().__init__()
-
-        async def run(self) -> None:
-            # todo
-            pass
+        review_creation_b = self.ReviewCreationBehav()
+        self.add_behaviour(
+            review_creation_b,
+            Template(metadata=reviewManagement.ReviewCreation.metadata)
+        )
 
     # class SendTokenExpiredInfoBehav(OneShotBehaviour):
     #     async def run(self) -> None:
@@ -93,3 +85,23 @@ class ReviewCollectorAgent(Agent):
                 target_jid = json.loads(msg.body)
                 resp = reviewManagement.ReviewsResponse(to=str(msg.sender), data=self.agent.get_reviews(target_jid))
                 await self.send(resp)
+
+    def create_review(self, contents: str, rating: int, request_id: int, from_: str, to: str) -> None:
+        new_review = Review(contents, rating, request_id, from_, to)
+        reviews = self.get('reviews')
+        reviews[to] = reviews.get(to, []) + [new_review]
+        self.set('reviews', reviews)
+
+    class ReviewCreationBehav(CyclicBehaviour):
+        async def run(self) -> None:
+            print(f'{repr(self)} started')
+            if (msg := await self.receive(timeout=1000)) is not None:
+                print(f'Message received: {msg.body}')
+                kwargs = json.loads(msg.body)
+                if {'contents', 'rating', 'request_id', 'from_', 'to'}.issubset(kwargs.keys()):
+                    self.agent.create_review(**kwargs)
+                    print(f'Review created: {kwargs}')
+                else:
+                    print(f'Review creation failed: {kwargs}')
+
+

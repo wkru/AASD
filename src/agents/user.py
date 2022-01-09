@@ -87,3 +87,15 @@ class UserAgent(Agent):
             if (msg := await self.receive(timeout=1000)) is not None:
                 print(f'Message received: {msg.body}')
                 self.agent.set('last_received_msg', msg)
+
+    class ReviewCreationReqBehav(OneShotBehaviour):
+        async def run(self) -> None:
+            print(f'{repr(self)} running')
+            kwargs = self.agent.get('kwargs')
+            self.agent.set('kwargs', None)
+            msg = reviewManagement.ReviewCreation(
+                to=self.agent.get(self.agent.review_collector_key),
+                data=kwargs
+            )
+            await self.send(msg)
+            print('Message sent!')
