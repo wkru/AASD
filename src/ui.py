@@ -67,8 +67,8 @@ def add_new_user():
     global next_user_id, users, new_user_added
     new_user_added = True
     username = input('Podaj nazwę użytkownika: ')
-    x = custom_input('Podaj współrzędną x użytkownika', float)
-    y = custom_input('Podaj współrzędną y użytkownika', float)
+    x = custom_input('Podaj współrzędną x użytkownika', float, cancel=False)
+    y = custom_input('Podaj współrzędną y użytkownika', float, cancel=False)
     useragent1 = UserAgent('user' + str(next_user_id) + '@localhost', "aasd")
     next_user_id += 1
     useragent1.start()
