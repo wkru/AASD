@@ -1,0 +1,11 @@
+--- behaviour.py	2022-01-07 11:46:27.035669943 +0100
++++ behaviour.py	2022-01-07 11:47:11.115485547 +0100
+@@ -60,7 +60,7 @@
+ 
+         """
+         self.agent = agent
+-        self.queue = asyncio.Queue(loop=self.agent.loop)
++        self.queue = asyncio.Queue()
+         self.presence = agent.presence
+         self.web = agent.web
+ 
