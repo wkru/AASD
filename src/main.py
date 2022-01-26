@@ -110,6 +110,6 @@ def main(run_ui: bool = False):
 
 if __name__ == "__main__":
     run_ui = len(sys.argv) > 1
-    logging_level = logging.ERROR if run_ui else logging.ERROR
+    logging_level = logging.ERROR if run_ui else logging.INFO
     logging.basicConfig(level=logging_level)
     main(run_ui=run_ui)

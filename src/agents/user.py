@@ -96,6 +96,12 @@ class UserAgent(Agent):
             Template(metadata=reviewManagement.ReviewToken.metadata),
         )
 
+        user_list_resp_b = self.UserListRespBehav()
+        self.add_behaviour(
+            user_list_resp_b,
+            Template(metadata=requestManagement.UserListResponse.metadata),
+        )
+
     class RecvBehav(CyclicBehaviour):
         async def run(self):
 
@@ -322,4 +328,18 @@ class UserAgent(Agent):
                 self.set('review_tokens', tokens)
                 self.agent.set('last_received_msg', msg)
 
+    class UserListReqBehav(OneShotBehaviour):
+        async def run(self):
+            logging.info(f'{repr(self)} running')
+            msg = requestManagement.UserListRetrieve(to=self.agent.get('information_broker_jid'))
+            await self.send(msg)
 
+    class UserListRespBehav(CyclicBehaviour):
+        async def run(self):
+            logging.info(f'{repr(self)} running')
+            if (msg := await self.receive(timeout=1000)) is not None:
+                logging.info(f'Message received: {msg.body}')
+                print(msg.body)
+                user_list = json.loads(msg.body)
+                queue = self.agent.get('queue')
+                queue.put_nowait(user_list)

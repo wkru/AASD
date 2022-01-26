@@ -64,6 +64,16 @@ class CategoriesResponse(Message):
         super().__init__(to=to, body=body, metadata={'performative': 'inform', 'protocol': 'categories', 'ontology': ONTOLOGY})
 
 
+class UserListRetrieve(Message):
+    metadata = {'performative': 'request', 'protocol': 'user_list'}
+
+    def __init__(self, to):
+        super().__init__(to=to, metadata={'performative': 'request', 'protocol': 'user_list', 'ontology': ONTOLOGY})
 
 
+class UserListResponse(Message):
+    metadata = {'performative': 'inform', 'protocol': 'user_list'}
 
+    def __init__(self, to, data):
+        body = json.dumps(data)
+        super().__init__(to=to, body=body, metadata={'performative': 'inform', 'protocol': 'user_list', 'ontology': ONTOLOGY})

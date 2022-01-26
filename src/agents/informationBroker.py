@@ -66,6 +66,12 @@ class InformationBrokerAgent(Agent):
         deregister_request_template.set_metadata("protocol", "deregister")
         self.add_behaviour(deregister_request, deregister_request_template)
 
+        user_list_b = self.UserListBehav()
+        self.add_behaviour(
+            user_list_b,
+            Template(metadata=requestManagement.UserListRetrieve.metadata),
+        )
+
     class UserRequestsBehav(CyclicBehaviour):
         async def run(self):
             msg = await self.receive(timeout=1000)  # wait for a message for 10 seconds
@@ -172,3 +178,11 @@ class InformationBrokerAgent(Agent):
                     self.agent.set('users', users)
                 except:
                     logging.error('User {} not in active users'.format(msg.sender))
+
+    class UserListBehav(CyclicBehaviour):
+        async def run(self):
+            msg = await self.receive(timeout=1000)  # wait for a message for 10 seconds
+            if msg:
+                users = self.agent.get('users')
+                resp = requestManagement.UserListResponse(to=str(msg.sender), data=users)
+                await self.send(resp)

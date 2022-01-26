@@ -184,6 +184,7 @@ def retrieve_vault_products():
         return
 
     execute_from_menu(options, 'Wybierz produkt do pobrania:')
+    print('\nPobrano produkt z banku.')
 
 
 def _get_product_from_vault(id):
@@ -214,7 +215,6 @@ def _send_review(token: Token):
         print('Nieprawidłowa ocena!')
         return
 
-    print(token)
     review = {
         'contents': contents, 'rating': rating, 'request_id': token.request_id, 'from_': token.from_, 'to': token.to
     }
@@ -224,10 +224,22 @@ def _send_review(token: Token):
     active_user.add_behaviour(UserAgent.ReviewCreationReqBehav())
 
 
+def get_user_list():
+    active_user.add_behaviour(UserAgent.UserListReqBehav())
+    try:
+        users = active_user.get('queue').get(timeout=5)
+    except:
+        print('Błąd pobierania listy użytkowników!')
+        return
+    return users
+
+
 def print_reviews():
     options = []
-    for username, user in users:
-        options.append((str(user.jid), _print_reviews, str(user.jid)))
+    users = get_user_list()
+    for user_jid in users:
+        options.append((user_jid.split('@')[0].split('_')[1], _print_reviews, user_jid))
+        # options.append((user_jid, _print_reviews, user_jid))
 
     execute_from_menu(options, 'Wybierz użytkownika do pobrania recenzji:')
 
@@ -253,15 +265,14 @@ def print_leaderboard():
         return
     print('Top pomagacze')
     for i, user in enumerate(leaderboard):
+        user = user.split('@')[0].split('_')[1]
         print(i+1, user)
 
-
-def manage_services():
-    pass
 
 def quit_ui():
     quit_spade()
     exit(0)
+
 
 def run():
     global active_user
@@ -271,11 +282,10 @@ def run():
                     ('Wyświetl listę własnych zgłoszeń', retrieve_requests, True),
                     ('Wyświetl listę zgłoszeń innych osób', retrieve_requests, False),
                     ('Dodaj produkt do banku', add_product_to_vault, None),
-                    ('Wyświetl produkty w banku', retrieve_vault_products, None),
+                    ('Wyświetl i pobierz produkty z banku', retrieve_vault_products, None),
                     ('Wystaw recenzję', add_review, None),
                     ('Sprawdź recenzje użytkownika', print_reviews, None),
                     ('Wyświetl listę Top Pomagaczy', print_leaderboard, None),
-                    ('Zarządzanie systemem agentów', manage_services, None),
                     ('Zakończ program', quit_ui, None)]
 
     while True:
