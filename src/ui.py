@@ -72,7 +72,8 @@ def add_new_user():
     y = custom_input('Podaj współrzędną y użytkownika', float, cancel=False)
     phone = input('Podaj numer telefonu użytkownika: ')
     email = input('Podaj adres e-mail użytkownika: ')
-    useragent1 = UserAgent('user' + str(next_user_id) + '@localhost', "aasd")
+    # useragent1 = UserAgent('user' + str(next_user_id) + '@localhost', "aasd")
+    useragent1 = UserAgent('user_' + username + '@localhost', "aasd")
     next_user_id += 1
     useragent1.start()
     users.append((username, useragent1))
@@ -128,7 +129,8 @@ def retrieve_requests(own=False):
 
     options = []
     for request in requests:
-        if request['username'] == str(active_user.jid):
+        # if request['username'] == str(active_user.jid):
+        if str(active_user.jid) in request['username']:
             if own:
                 options.append((str(request), _cancel_request, request['id']))
         else:

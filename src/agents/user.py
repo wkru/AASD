@@ -124,7 +124,9 @@ class UserAgent(Agent):
                 msg_json = json.loads(msg.body)
                 if msg_json['username'] != str(self.agent.jid):
                     del msg_json["username"]
-                    self.agent.set("notifications", self.agent.get("notifications") + [msg_json])
+                    notifications = self.agent.get("notifications")
+                    notifications.append(msg_json)
+                    self.agent.set("notifications", notifications)
 
     class AcceptBehav(OneShotBehaviour):
         async def run(self):
@@ -151,6 +153,11 @@ class UserAgent(Agent):
                 logging.info('Comment:', msg_json['accepted_request']['comment'])
                 logging.info('Username:', msg_json['accepted_request']['username'])
                 logging.info('Contact info:', msg_json['contact'])
+                print("Twoje zgłoszenie zostało zaakceptowane!")
+
+                notifications = self.agent.get("notifications")
+                notifications.append(msg_json)
+                self.agent.set("notifications", notifications)
 
     class RecvCancelBehav(CyclicBehaviour):
         async def run(self):
@@ -232,6 +239,7 @@ class UserAgent(Agent):
                     self.agent.set('information_broker_jid', msg_contents['information-broker'])
                     self.agent.set('review_collector_jid', msg_contents['review-collector'])
                     self.agent.set('product_vault_jid', msg_contents['product-vault'])
+                    self.agent.add_behaviour(self.agent.Register())
                 except:
                     logging.error('Malformed ServicesRespond message received')
 

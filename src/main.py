@@ -1,6 +1,7 @@
 import time
 from typing import Type
 import logging
+import sys
 
 from spade.agent import Agent
 
@@ -22,24 +23,25 @@ def create_agent(agent_cls: Type[Agent], jid: str) -> Agent:
     return agent
 
 
-def main():
-    bd_agent = create_agent(BrokerDirectoryAgent, "broker-directory")
-    rragent = create_agent(InformationBrokerAgent, "information-broker-1")
-    pvagent = create_agent(ProductVaultAgent, "product-vault-1")
-    rcagent = create_agent(ReviewCollectorAgent, 'review-collector-1')
-    rragent2 = create_agent(InformationBrokerAgent, "information-broker-2")
-    pvagent2 = create_agent(ProductVaultAgent, "product-vault-2")
-    rcagent2 = create_agent(ReviewCollectorAgent, 'review-collector-2')
-    useragent1 = create_agent(UserAgent, "user1")
-    useragent2 = create_agent(UserAgent, "user2")
+def main(run_ui: bool = False):
+    if not run_ui:
+        bd_agent = create_agent(BrokerDirectoryAgent, "broker-directory")
+        rragent = create_agent(InformationBrokerAgent, "information-broker-1")
+        pvagent = create_agent(ProductVaultAgent, "product-vault-1")
+        rcagent = create_agent(ReviewCollectorAgent, 'review-collector-1')
+        rragent2 = create_agent(InformationBrokerAgent, "information-broker-2")
+        pvagent2 = create_agent(ProductVaultAgent, "product-vault-2")
+        rcagent2 = create_agent(ReviewCollectorAgent, 'review-collector-2')
+        # useragent1 = create_agent(UserAgent, "user1")
+        # useragent2 = create_agent(UserAgent, "user2")
 
 
-    for a in agents:
-        future = a.start()
-        future.result()
+        for a in agents:
+            future = a.start()
+            future.result()
 
-    rragent.set(InformationBrokerAgent.review_collector_key, 'review-collector-1@localhost')
-    rragent2.set(InformationBrokerAgent.review_collector_key, 'review-collector-2@localhost')
+        rragent.set(InformationBrokerAgent.review_collector_key, 'review-collector-1@localhost')
+        rragent2.set(InformationBrokerAgent.review_collector_key, 'review-collector-2@localhost')
 
     # useragent1.set('location', Location(1, 1))
     # useragent1.add_behaviour(UserAgent.ServicesReqBehav())
@@ -92,19 +94,22 @@ def main():
     #
     # useragent1.add_behaviour(useragent1.VaultOffersReqBehav())
 
-    ui.run()
+    if run_ui:
+        ui.run()
 
-
-    while rragent.is_alive() or pvagent.is_alive():
-        try:
-            time.sleep(1)
-        except KeyboardInterrupt:
-            for a in agents:
-                a.stop()
-            break
-    logging.info("Agents finished")
+    if not run_ui:
+        while rragent.is_alive() or pvagent.is_alive():
+            try:
+                time.sleep(1)
+            except KeyboardInterrupt:
+                for a in agents:
+                    a.stop()
+                break
+        logging.info("Agents finished")
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.ERROR)
-    main()
+    run_ui = len(sys.argv) > 1
+    logging_level = logging.ERROR if run_ui else logging.ERROR
+    logging.basicConfig(level=logging_level)
+    main(run_ui=run_ui)

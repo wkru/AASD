@@ -96,6 +96,7 @@ class InformationBrokerAgent(Agent):
                 data = json.loads(msg.body)
                 request_valid = False
                 for request in self.agent.get("requests"):
+                    # print('acceptedbehav loop')
                     if request["id"] == data["id"]:
                         request_valid = True
                         request_to_forward = request
@@ -118,11 +119,11 @@ class InformationBrokerAgent(Agent):
                         )
                     await self.send(msg)
 
-                    # cancel request for other users apart from issuer and acceptor
-                    for user in self.agent.get("users"):
-                        if user != request_to_forward["username"] and user != str(msg.sender):
-                            cancel_msg = requestManagement.CancellationForward(to=user, data=data)["id"]
-                            await self.send(cancel_msg)
+                    # # cancel request for other users apart from issuer and acceptor
+                    # for user in self.agent.get("users"):
+                    #     if user != request_to_forward["username"] and user != str(msg.sender):
+                    #         cancel_msg = requestManagement.CancellationForward(to=user, data=data)
+                    #         await self.send(cancel_msg)
                     await self.send(forward_msg)
 
     class CancelledBehav(CyclicBehaviour):
