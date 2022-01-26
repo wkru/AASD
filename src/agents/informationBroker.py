@@ -86,8 +86,9 @@ class InformationBrokerAgent(Agent):
                 requests.append(request)
                 self.agent.set("requests", requests)
                 for user in self.agent.get("users"):
-                    resp = requestManagement.BroadcastNew(to=user, data=request)
-                    await self.send(resp)
+                    if str(msg.sender) != user:
+                        resp = requestManagement.BroadcastNew(to=user, data=request)
+                        await self.send(resp)
 
     class AcceptedBehav(CyclicBehaviour):
         async def run(self):
@@ -110,8 +111,10 @@ class InformationBrokerAgent(Agent):
 
                     # generate review tokens
                     token_to_issue = {'request_id': request_to_forward['id'],
-                                        'from_': str(msg.sender),
-                                        'to': request_to_forward['username']}
+                                        # 'from_': str(msg.sender),
+                                        # 'to': request_to_forward['username']}
+                                        'from_': request_to_forward['username'],
+                                        'to': str(msg.sender)}
                     msg = reviewManagement.ReviewTokenCreation(
                             to=self.agent.get(self.agent.review_collector_key),
                             request_id=token_to_issue.get('request_id'),
@@ -119,11 +122,11 @@ class InformationBrokerAgent(Agent):
                         )
                     await self.send(msg)
 
-                    # # cancel request for other users apart from issuer and acceptor
-                    # for user in self.agent.get("users"):
-                    #     if user != request_to_forward["username"] and user != str(msg.sender):
-                    #         cancel_msg = requestManagement.CancellationForward(to=user, data=data)
-                    #         await self.send(cancel_msg)
+                    # cancel request for other users apart from issuer and acceptor
+                    for user in self.agent.get("users"):
+                        if user != request_to_forward["username"] and user != str(msg.sender):
+                            cancel_msg = requestManagement.CancellationForward(to=user, data=data)
+                            await self.send(cancel_msg)
                     await self.send(forward_msg)
 
     class CancelledBehav(CyclicBehaviour):

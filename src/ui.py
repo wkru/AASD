@@ -35,6 +35,9 @@ def print_menu(options, prompt='Wybierz dostępną opcję:', cancel=True):
 
     if chosen is None:
         return None
+    if chosen > len(options) - 1:
+        print('Wybierz poprawną opcję.')
+        return print_menu(options, prompt, cancel)
 
     return i, options[chosen]
 

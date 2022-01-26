@@ -81,7 +81,11 @@ class ReviewCollectorAgent(Agent):
                 await self.send(resp)
 
     def get_reviews(self, jid: str) -> list[Review]:
-        return self.get('reviews').get(jid, [])
+        reviews = self.get('reviews')
+        for k in reviews.keys():
+            if jid in k:
+                return reviews[k]
+        # return self.get('reviews').get(jid, [])
 
     class ReviewsBehav(CyclicBehaviour):
         async def run(self) -> None:
