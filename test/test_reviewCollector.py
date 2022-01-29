@@ -68,9 +68,9 @@ class TestReviewCollector(unittest.TestCase):
     def test_leaderboard(self):
         leaderboard = ['a', 'b', 'c']
         self.review_collector.set('leaderboard', leaderboard)
+        self.user.set('last_received_msg', None)
         self.user.add_behaviour(UserAgent.LeaderboardReqBehav())
-
-        msg = wait_and_get(self.user, 'last_received_msg')
+        msg = wait_and_get(self.user, 'last_received_msg', value_to_check=None)
 
         self.assertEqual(json.loads(msg.body), leaderboard)
 
@@ -115,15 +115,15 @@ class TestReviewCollector(unittest.TestCase):
 
     @timeout_decorator.timeout(10)
     def test_reviews(self):
-        user0, *_, reviews = review_setup()
+        _, user1, *_, reviews = review_setup()
 
         self.review_collector.set('reviews', reviews)
-        self.user.set('target_jid', user0)
+        self.user.set('target_jid', user1)
+        self.user.set('last_received_msg', None)
         self.user.add_behaviour(UserAgent.ReviewsReqBehav())
-
-        msg = wait_and_get(self.user, 'last_received_msg')
+        msg = wait_and_get(self.user, 'last_received_msg', value_to_check=None)
         obj = json.loads(msg.body, object_hook=lambda d: Review(**d))
-        self.assertEqual(obj, reviews[user0])
+        self.assertEqual(obj, reviews[user1])
 
     @timeout_decorator.timeout(10)
     def test_first_create_review(self):
