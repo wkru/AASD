@@ -279,7 +279,7 @@ def run():
     main_options = [('Zmień/dodaj użytkownika', change_user, None),
                     ('Sprawdź powiadomienia', print_notifications, None),
                     ('Dodaj zgłoszenie', add_request, None),
-                    ('Wyświetl listę własnych zgłoszeń', retrieve_requests, True),
+                    ('Wyświetl listę weasnych zgłoszeń', retrieve_requests, True),
                     ('Wyświetl listę zgłoszeń innych osób', retrieve_requests, False),
                     ('Dodaj produkt do banku', add_product_to_vault, None),
                     ('Wyświetl i pobierz produkty z banku', retrieve_vault_products, None),

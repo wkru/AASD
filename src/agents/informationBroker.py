@@ -14,10 +14,7 @@ class InformationBrokerAgent(Agent):
     review_collector_key = 'review_collector'
 
     async def setup(self):
-        self.set("requests", [{'id': 1, 'category': 'salt', 'comment': 'Himalaya salt', 'username': 'user1@localhost'},
-                         {"id": "f9a4be60598dac4d8c28157c2a342cff4e3caed484fc27bab97be2790d75caa5",
-                          "username": "user2@localhost", "category": "salt", "comment": "Himalaya salt"}
-                         ])
+        self.set("requests", [])
         self.set("users",  [])
         self.set("categories", ["salt", "pepper"])
 
@@ -103,7 +100,6 @@ class InformationBrokerAgent(Agent):
                 data = json.loads(msg.body)
                 request_valid = False
                 for request in self.agent.get("requests"):
-                    # print('acceptedbehav loop')
                     if request["id"] == data["id"]:
                         request_valid = True
                         request_to_forward = request
@@ -117,8 +113,6 @@ class InformationBrokerAgent(Agent):
 
                     # generate review tokens
                     token_to_issue = {'request_id': request_to_forward['id'],
-                                        # 'from_': str(msg.sender),
-                                        # 'to': request_to_forward['username']}
                                         'from_': request_to_forward['username'],
                                         'to': str(msg.sender)}
                     msg = reviewManagement.ReviewTokenCreation(
@@ -160,13 +154,16 @@ class InformationBrokerAgent(Agent):
                 resp = requestManagement.CategoriesResponse(to=str(msg.sender), data=self.agent.get('categories'))
                 await self.send(resp)
 
+    def register(self, user: str):
+        users = self.get('users')
+        users.append(user)
+        self.set('users', users)
+
     class RegisterBehav(CyclicBehaviour):
         async def run(self):
             msg = await self.receive(timeout=1000)  # wait for a message for 10 seconds
             if msg:
-                users = self.agent.get('users')
-                users.append(str(msg.sender))
-                self.agent.set('users', users)
+                self.agent.register(str(msg.sender))
 
     class DeregisterBehav(CyclicBehaviour):
         async def run(self):

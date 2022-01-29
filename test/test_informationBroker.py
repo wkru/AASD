@@ -1,13 +1,13 @@
 import unittest
 from time import sleep
 
+from spade.behaviour import OneShotBehaviour
 import timeout_decorator
 
 from utils import create_agent, wait_and_get
 from src.agents.reviewCollector import ReviewCollectorAgent
 from src.agents.informationBroker import InformationBrokerAgent
 from src.agents.user import UserAgent
-from src.misc.review import Token
 
 
 class TestInformationBroker(unittest.TestCase):
@@ -23,44 +23,44 @@ class TestInformationBroker(unittest.TestCase):
             future = a.start()
             future.result()
 
+        self.information_broker.register(str(self.user0.jid))
+        self.information_broker.register(str(self.user1.jid))
+        self.user0.set('information_broker_jid', str(self.information_broker.jid))
+        self.user0.set('review_collector', str(self.review_collector.jid))
+        self.user1.set('information_broker_jid', str(self.information_broker.jid))
+        self.user1.set('review_collector', str(self.review_collector.jid))
+        self.information_broker.set('review_collector', str(self.review_collector.jid))
+
+        self.user0.set('new_request', {'category': 'salt', 'comment': 'some comment'})
+        self.user0.add_behaviour(UserAgent.AddRequestBehav())
+        requests = wait_and_get(self.information_broker, 'requests', value_to_check=[])
+        request_id = requests[0]['id']
+        self.user1.set("request_to_accept", request_id)
+        self.user1.add_behaviour(UserAgent.AcceptBehav())
+
     def tearDown(self) -> None:
         for a in self.agents:
             a.stop()
 
-    # @timeout_decorator.timeout(10)
-    # def test_issuing_review_tokens(self):
-    #     self.information_broker.set('requests', [])
-    #     self.information_broker.set('tokens_to_issue', [{'from_': 'user0', 'to': 'user1', 'request_id': 0}])
-    #     self.information_broker.add_behaviour(InformationBrokerAgent.ReviewTokenCreationReqBehav())
-    #
-    #     tokens = wait_and_get(self.review_collector, 'tokens', value_to_check={})
-    #
-    #     self.assertEqual(tokens, {0: Token(0, ['user0', 'user1'])})
+    def get_send_behav_for(self, msg):
+        class SendBehaviour(OneShotBehaviour):
+            def run(self):
+                print("Sending message: {}".format(msg))
+                self.send(msg)
+        return SendBehaviour()
 
-    # @timeout_decorator.timeout(10)
-    # def test_information_broker_drops_issued_tokens(self):
-    #     to_issue = [{'from_': 'user0', 'to': 'user1', 'request_id': 0}]
-    #     self.information_broker.set('tokens_to_issue', to_issue)
-    #     self.information_broker.add_behaviour(InformationBrokerAgent.ReviewTokenCreationReqBehav())
-    #
-    #     sleep(0.01)
-    #     tokens = self.information_broker.get('tokens_to_issue')
-    #
-    #     self.assertEqual(tokens, [])
+    @timeout_decorator.timeout(10)
+    def test_issuing_review_tokens(self):
+        tokens = wait_and_get(self.review_collector, 'tokens', value_to_check={})
+        self.assertTrue(len(tokens) == 1)
 
-    # @timeout_decorator.timeout(10)
-    # def test_users_get_review_tokens(self):
-    #     self.assertEqual(self.user0.get('review_tokens'), {})
-    #     self.assertEqual(self.user1.get('review_tokens'), {})
-    #
-    #     self.information_broker.set('tokens_to_issue', [{'from_': str(self.user0.jid), 'to': str(self.user1.jid), 'request_id': 0}])
-    #     self.information_broker.add_behaviour(InformationBrokerAgent.ReviewTokenCreationReqBehav())
-    #
-    #     user0_tokens = wait_and_get(self.user0, 'review_tokens', value_to_check={})
-    #     user1_tokens = wait_and_get(self.user0, 'review_tokens', value_to_check={})
-    #
-    #     self.assertEqual(user0_tokens, {0: Token(0, ['user0@localhost', 'user1@localhost'])})
-    #     self.assertEqual(user1_tokens, {0: Token(0, ['user0@localhost', 'user1@localhost'])})
+    @timeout_decorator.timeout(10)
+    def test_users_get_review_tokens(self):
+        user0_tokens = wait_and_get(self.user0, 'review_tokens', value_to_check={})
+        user1_tokens = wait_and_get(self.user0, 'review_tokens', value_to_check={})
+
+        self.assertTrue(len(user0_tokens) == 1)
+        self.assertTrue(len(user1_tokens) == 1)
 
 
 if __name__ == '__main__':

@@ -11,7 +11,6 @@ from src.misc.review import Token
 from src.config import BROKER_DIRECTORY_JID
 
 
-
 class UserAgent(Agent):
     review_collector_key = 'review_collector'
 
@@ -20,8 +19,7 @@ class UserAgent(Agent):
         self.set('review_tokens', {})
 
         # self.set("new_request", {'category': 'salt', 'comment': 'Himalaya salt'})
-        self.set("notifications", [{'id': 'f9a4be60598dac4d8c28157c2a342cff4e3caed484fc27bab97be2790d75caa5',
-                                    'category': 'salt', 'comment': 'Himalaya salt'}])
+        self.set("notifications", [])
         self.set('queue', Queue(1))
 
         incoming_request = self.IncomingRequestBehav()
@@ -125,7 +123,6 @@ class UserAgent(Agent):
 
     class IncomingRequestBehav(CyclicBehaviour):
         async def run(self):
-
             if (msg := await self.receive(timeout=1000)) is not None:
                 msg_json = json.loads(msg.body)
                 if msg_json['username'] != str(self.agent.jid):
@@ -339,7 +336,6 @@ class UserAgent(Agent):
             logging.info(f'{repr(self)} running')
             if (msg := await self.receive(timeout=1000)) is not None:
                 logging.info(f'Message received: {msg.body}')
-                print(msg.body)
                 user_list = json.loads(msg.body)
                 queue = self.agent.get('queue')
                 queue.put_nowait(user_list)
